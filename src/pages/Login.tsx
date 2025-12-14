@@ -63,7 +63,7 @@ export default function Login({ onLogin }: LoginProps) {
           <img 
             src="https://cdn.poehali.dev/files/сеть азс 3.png" 
             alt="Сеть АЗС" 
-            className="w-full h-auto max-w-lg"
+            className="w-[80%] h-auto max-w-md"
           />
         </div>
 
