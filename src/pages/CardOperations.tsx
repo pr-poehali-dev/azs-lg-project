@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { useOperations } from '@/contexts/OperationsContext';
+import * as XLSX from 'xlsx';
 
 interface ClientData {
   name: string;
@@ -84,6 +85,26 @@ export default function CardOperations() {
 
   const handlePrintOperations = () => {
     window.print();
+  };
+
+  const handleExportToExcel = () => {
+    const exportData = operationsWithBalance.map(op => ({
+      'Дата': op.operation_date,
+      'АЗС': op.station_name,
+      'Тип операции': op.operation_type,
+      'Количество (л)': op.quantity,
+      'Цена (руб/л)': op.price,
+      'Сумма (руб)': op.amount,
+      'Баланс после операции (л)': op.balance,
+      'Комментарий': op.comment
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Операции');
+    
+    const fileName = `operations_card_${selectedCardData?.card_code}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   };
 
   const handleShowAllOperations = () => {
@@ -216,6 +237,14 @@ export default function CardOperations() {
               История операций
             </CardTitle>
             <div className="flex gap-2 no-print">
+              <Button
+                onClick={handleExportToExcel}
+                variant="outline"
+                className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground"
+              >
+                <Icon name="FileSpreadsheet" size={16} className="mr-2" />
+                Экспорт в Excel
+              </Button>
               <Button
                 onClick={handlePrintOperations}
                 variant="outline"
