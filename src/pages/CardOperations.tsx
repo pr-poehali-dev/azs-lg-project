@@ -167,18 +167,26 @@ export default function CardOperations() {
     }
   };
 
-  const operationsWithBalance = filteredOperations.map((op, index) => {
-    let runningBalance = 0;
-    for (let i = 0; i <= index; i++) {
-      const currentOp = filteredOperations[i];
-      if (currentOp.operation_type === 'пополнение' || currentOp.operation_type === 'оприходование') {
-        runningBalance += currentOp.quantity;
-      } else if (currentOp.operation_type === 'заправка' || currentOp.operation_type === 'списание') {
-        runningBalance -= currentOp.quantity;
-      }
+  const allCardOperations = [...cardOperations].sort((a, b) => 
+    new Date(a.operation_date).getTime() - new Date(b.operation_date).getTime()
+  );
+
+  const balanceMap = new Map<number, number>();
+  let currentBalance = 0;
+  
+  allCardOperations.forEach(op => {
+    if (op.operation_type === 'пополнение' || op.operation_type === 'оприходование') {
+      currentBalance += op.quantity;
+    } else if (op.operation_type === 'заправка' || op.operation_type === 'списание') {
+      currentBalance -= op.quantity;
     }
-    return { ...op, balance: runningBalance };
+    balanceMap.set(op.id, currentBalance);
   });
+
+  const operationsWithBalance = filteredOperations.map(op => ({
+    ...op,
+    balance: balanceMap.get(op.id) || 0
+  }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
