@@ -180,45 +180,34 @@ export default function CardOperations() {
       </div>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm no-print">
-          <CardHeader>
-            <CardTitle className="text-2xl text-foreground flex items-center gap-2">
-              <Icon name="Building2" size={28} className="text-accent" />
-              Информация о клиенте
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Наименование</p>
-              <p className="text-lg font-semibold text-foreground">{clientData.name}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">ИНН</p>
-              <p className="text-lg font-semibold text-foreground">{clientData.inn}</p>
+        <Card className="border-2 border-accent bg-card/95 backdrop-blur-sm no-print">
+          <CardContent className="py-4">
+            <div className="grid md:grid-cols-4 gap-4 items-center">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Клиент</p>
+                <p className="text-sm font-semibold text-foreground">{clientData.name}</p>
+                <p className="text-xs text-muted-foreground">ИНН: {clientData.inn}</p>
+              </div>
+              
+              {selectedCardData && (
+                <>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Номер карты</p>
+                    <p className="text-xl font-bold text-accent">{selectedCardData.card_code}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Вид топлива</p>
+                    <p className="text-lg font-bold text-foreground">{selectedCardData.fuel_type}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Баланс</p>
+                    <p className="text-2xl font-bold text-primary">{selectedCardData.balance_liters.toFixed(2)} л</p>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
-
-        {selectedCardData && (
-          <Card className="border-2 border-accent bg-accent/10 backdrop-blur-sm no-print">
-            <CardContent className="py-4">
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Номер карты</p>
-                  <p className="text-2xl font-bold text-accent">{selectedCardData.card_code}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Вид топлива</p>
-                  <p className="text-xl font-semibold text-foreground">{selectedCardData.fuel_type}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Текущий баланс</p>
-                  <p className="text-2xl font-bold text-accent">{selectedCardData.balance_liters.toFixed(2)} л</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between">
