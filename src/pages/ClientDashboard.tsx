@@ -60,6 +60,7 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
   const [transferAmount, setTransferAmount] = useState('');
   const [targetCardId, setTargetCardId] = useState<number | null>(null);
   const [newDailyLimit, setNewDailyLimit] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'активна' | 'заблокирована'>('all');
 
   const handleViewCardOperations = (cardId: number) => {
     navigate(`/card-operations?cardId=${cardId}`);
@@ -163,6 +164,10 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     ? cards.filter(c => c.id !== selectedCardId && c.fuel_type === selectedCard.fuel_type && c.owner === selectedCard.owner)
     : [];
 
+  const filteredCards = statusFilter === 'all' 
+    ? cards 
+    : cards.filter(card => card.status === statusFilter);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
       <header className="bg-card border-b-4 border-accent shadow-lg">
@@ -217,6 +222,22 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 flex items-center gap-4">
+              <Label htmlFor="status-filter" className="text-foreground whitespace-nowrap">Фильтр по статусу:</Label>
+              <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as 'all' | 'активна' | 'заблокирована')}>
+                <SelectTrigger id="status-filter" className="w-[200px] bg-input border-2 border-border text-foreground">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все карты</SelectItem>
+                  <SelectItem value="активна">Активные</SelectItem>
+                  <SelectItem value="заблокирована">Заблокированные</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="ml-auto text-sm text-muted-foreground">
+                Найдено карт: <strong className="text-accent">{filteredCards.length}</strong>
+              </div>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow className="border-b-2 border-border">
@@ -229,7 +250,14 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cards.map((card) => (
+                {filteredCards.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      Карты не найдены
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredCards.map((card) => (
                   <TableRow key={card.id} className="border-b border-border">
                     <TableCell className="font-mono text-accent py-2">
                       {card.card_code}
@@ -300,7 +328,8 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
