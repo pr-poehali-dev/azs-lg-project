@@ -41,6 +41,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsClientDialogOpen(true);
   };
 
+  const handleSaveClient = () => {
+    if (editingClient) {
+      setClients(clients.map(c => c.id === editingClient.id ? editingClient : c));
+      setIsClientDialogOpen(false);
+      setEditingClient(null);
+    }
+  };
+
   const [fuelTypes, setFuelTypes] = useState([
     { id: 1, name: 'АИ-92', code_1c: '100001' },
     { id: 2, name: 'АИ-95', code_1c: '100002' },
@@ -60,6 +68,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleEditFuelType = (fuelType: any) => {
     setEditingFuelType(fuelType);
     setIsFuelTypeDialogOpen(true);
+  };
+
+  const handleSaveFuelType = () => {
+    if (editingFuelType) {
+      setFuelTypes(fuelTypes.map(f => f.id === editingFuelType.id ? editingFuelType : f));
+      setIsFuelTypeDialogOpen(false);
+      setEditingFuelType(null);
+    }
   };
 
   const [cards, setCards] = useState([
@@ -85,6 +101,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleEditCard = (card: any) => {
     setEditingCard(card);
     setIsCardDialogOpen(true);
+  };
+
+  const handleSaveCard = () => {
+    if (editingCard) {
+      setCards(cards.map(c => c.id === editingCard.id ? editingCard : c));
+      setIsCardDialogOpen(false);
+      setEditingCard(null);
+    }
   };
 
   const [operations, setOperations] = useState([
@@ -127,6 +151,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleEditOperation = (operation: any) => {
     setEditingOperation(operation);
     setIsOperationDialogOpen(true);
+  };
+
+  const handleSaveOperation = () => {
+    if (editingOperation) {
+      setOperations(operations.map(o => o.id === editingOperation.id ? editingOperation : o));
+      setIsOperationDialogOpen(false);
+      setEditingOperation(null);
+    }
   };
 
   const filteredOperations = operations.filter(op => {
@@ -288,6 +320,77 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Edit Client Dialog */}
+            <Dialog open={isClientDialogOpen} onOpenChange={setIsClientDialogOpen}>
+              <DialogContent className="bg-card border-2 border-accent">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Редактировать клиента</DialogTitle>
+                </DialogHeader>
+                {editingClient && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="edit-inn" className="text-foreground">ИНН</Label>
+                      <Input 
+                        id="edit-inn" 
+                        value={editingClient.inn}
+                        onChange={(e) => setEditingClient({...editingClient, inn: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-name" className="text-foreground">Наименование</Label>
+                      <Input 
+                        id="edit-name" 
+                        value={editingClient.name}
+                        onChange={(e) => setEditingClient({...editingClient, name: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-address" className="text-foreground">Адрес</Label>
+                      <Input 
+                        id="edit-address" 
+                        value={editingClient.address}
+                        onChange={(e) => setEditingClient({...editingClient, address: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-phone" className="text-foreground">Телефон</Label>
+                      <Input 
+                        id="edit-phone" 
+                        value={editingClient.phone}
+                        onChange={(e) => setEditingClient({...editingClient, phone: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-email" className="text-foreground">Email</Label>
+                      <Input 
+                        id="edit-email" 
+                        type="email" 
+                        value={editingClient.email}
+                        onChange={(e) => setEditingClient({...editingClient, email: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-login" className="text-foreground">Логин</Label>
+                      <Input 
+                        id="edit-login" 
+                        value={editingClient.login}
+                        onChange={(e) => setEditingClient({...editingClient, login: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <Button onClick={handleSaveClient} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      Сохранить
+                    </Button>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="cards">
@@ -315,37 +418,37 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <SelectTrigger className="bg-input text-foreground">
                             <SelectValue placeholder="Выберите клиента" />
                           </SelectTrigger>
-                          <SelectContent className="bg-card border-2 border-accent">
-                            {clients.map(c => (
-                              <SelectItem key={c.id} value={c.id.toString()} className="text-foreground">{c.name}</SelectItem>
+                          <SelectContent>
+                            {clients.map(client => (
+                              <SelectItem key={client.id} value={client.name}>{client.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="fuel-type" className="text-foreground">Вид топлива</Label>
+                        <Label htmlFor="fuel" className="text-foreground">Вид топлива</Label>
                         <Select>
                           <SelectTrigger className="bg-input text-foreground">
                             <SelectValue placeholder="Выберите топливо" />
                           </SelectTrigger>
-                          <SelectContent className="bg-card border-2 border-accent">
-                            {fuelTypes.map(f => (
-                              <SelectItem key={f.id} value={f.id.toString()} className="text-foreground">{f.name}</SelectItem>
+                          <SelectContent>
+                            {fuelTypes.map(fuel => (
+                              <SelectItem key={fuel.id} value={fuel.name}>{fuel.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="card-code" className="text-foreground">Номер карты (1-9999)</Label>
+                        <Label htmlFor="card-code" className="text-foreground">Код карты</Label>
                         <Input id="card-code" placeholder="0001" className="bg-input text-foreground" />
                       </div>
                       <div>
-                        <Label htmlFor="pin" className="text-foreground">Пин-код (4 цифры)</Label>
-                        <Input id="pin" placeholder="1234" maxLength={4} className="bg-input text-foreground" />
+                        <Label htmlFor="pin" className="text-foreground">PIN-код</Label>
+                        <Input id="pin" type="password" placeholder="1234" className="bg-input text-foreground" />
                       </div>
                       <div>
-                        <Label htmlFor="balance" className="text-foreground">Начальный баланс (л)</Label>
-                        <Input id="balance" type="number" placeholder="0.00" className="bg-input text-foreground" />
+                        <Label htmlFor="balance" className="text-foreground">Начальный баланс (литры)</Label>
+                        <Input id="balance" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" />
                       </div>
                       <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                         Создать
@@ -359,27 +462,23 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b-2 border-border">
-                        <TableHead className="text-foreground font-bold">Номер карты</TableHead>
+                        <TableHead className="text-foreground font-bold">Код карты</TableHead>
                         <TableHead className="text-foreground font-bold">Клиент</TableHead>
                         <TableHead className="text-foreground font-bold">Вид топлива</TableHead>
-                        <TableHead className="text-foreground font-bold text-right">Баланс (л)</TableHead>
-                        <TableHead className="text-foreground font-bold">Пин-код</TableHead>
+                        <TableHead className="text-foreground font-bold">Баланс (л)</TableHead>
+                        <TableHead className="text-foreground font-bold">PIN</TableHead>
                         <TableHead className="text-foreground font-bold">Действия</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {cards.map((card) => (
                         <TableRow key={card.id} className="border-b border-border">
-                          <TableCell className="py-2 px-3 font-mono text-2xl font-bold text-accent">{card.card_code}</TableCell>
-                          <TableCell className="py-2 px-3 text-foreground font-semibold">{card.client_name}</TableCell>
+                          <TableCell className="py-2 px-3 font-mono text-accent font-bold">{card.card_code}</TableCell>
+                          <TableCell className="py-2 px-3 text-foreground">{card.client_name}</TableCell>
                           <TableCell className="py-2 px-3">
-                            <Badge variant="outline" className="border-accent text-accent">
-                              {card.fuel_type}
-                            </Badge>
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary">{card.fuel_type}</Badge>
                           </TableCell>
-                          <TableCell className="py-2 px-3 text-right font-mono text-lg font-semibold text-foreground">
-                            {card.balance_liters.toFixed(2)}
-                          </TableCell>
+                          <TableCell className="py-2 px-3 font-semibold text-accent">{card.balance_liters.toFixed(2)}</TableCell>
                           <TableCell className="py-2 px-3 font-mono text-muted-foreground">{card.pin_code}</TableCell>
                           <TableCell className="py-2 px-3">
                             <div className="flex gap-2">
@@ -398,6 +497,77 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Edit Card Dialog */}
+            <Dialog open={isCardDialogOpen} onOpenChange={setIsCardDialogOpen}>
+              <DialogContent className="bg-card border-2 border-accent">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Редактировать карту</DialogTitle>
+                </DialogHeader>
+                {editingCard && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="edit-card-code" className="text-foreground">Код карты</Label>
+                      <Input 
+                        id="edit-card-code" 
+                        value={editingCard.card_code}
+                        onChange={(e) => setEditingCard({...editingCard, card_code: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-client-name" className="text-foreground">Клиент</Label>
+                      <Select value={editingCard.client_name} onValueChange={(value) => setEditingCard({...editingCard, client_name: value})}>
+                        <SelectTrigger className="bg-input text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clients.map(client => (
+                            <SelectItem key={client.id} value={client.name}>{client.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-fuel-type" className="text-foreground">Вид топлива</Label>
+                      <Select value={editingCard.fuel_type} onValueChange={(value) => setEditingCard({...editingCard, fuel_type: value})}>
+                        <SelectTrigger className="bg-input text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fuelTypes.map(fuel => (
+                            <SelectItem key={fuel.id} value={fuel.name}>{fuel.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-balance" className="text-foreground">Баланс (литры)</Label>
+                      <Input 
+                        id="edit-balance" 
+                        type="number"
+                        step="0.01"
+                        value={editingCard.balance_liters}
+                        onChange={(e) => setEditingCard({...editingCard, balance_liters: parseFloat(e.target.value)})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-pin" className="text-foreground">PIN-код</Label>
+                      <Input 
+                        id="edit-pin" 
+                        value={editingCard.pin_code}
+                        onChange={(e) => setEditingCard({...editingCard, pin_code: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <Button onClick={handleSaveCard} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      Сохранить
+                    </Button>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="operations">
@@ -425,16 +595,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <SelectTrigger className="bg-input text-foreground">
                             <SelectValue placeholder="Выберите карту" />
                           </SelectTrigger>
-                          <SelectContent className="bg-card border-2 border-accent">
-                            {cards.map(c => (
-                              <SelectItem key={c.id} value={c.card_code} className="text-foreground">{c.card_code} - {c.client_name}</SelectItem>
+                          <SelectContent>
+                            {cards.map(card => (
+                              <SelectItem key={card.id} value={card.card_code}>{card.card_code}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="station" className="text-foreground">АЗС</Label>
-                        <Input id="station" placeholder="АЗС СОЮЗ №1" className="bg-input text-foreground" />
                       </div>
                       <div>
                         <Label htmlFor="op-type" className="text-foreground">Тип операции</Label>
@@ -442,25 +608,29 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <SelectTrigger className="bg-input text-foreground">
                             <SelectValue placeholder="Выберите тип" />
                           </SelectTrigger>
-                          <SelectContent className="bg-card border-2 border-accent">
-                            <SelectItem value="пополнение" className="text-foreground">Пополнение</SelectItem>
-                            <SelectItem value="заправка" className="text-foreground">Заправка</SelectItem>
-                            <SelectItem value="списание" className="text-foreground">Списание</SelectItem>
-                            <SelectItem value="оприходование" className="text-foreground">Оприходование</SelectItem>
+                          <SelectContent>
+                            <SelectItem value="пополнение">Пополнение</SelectItem>
+                            <SelectItem value="заправка">Заправка</SelectItem>
+                            <SelectItem value="списание">Списание</SelectItem>
+                            <SelectItem value="оприходование">Оприходование</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="quantity" className="text-foreground">Количество (л)</Label>
-                        <Input id="quantity" type="number" placeholder="0.00" className="bg-input text-foreground" />
+                        <Label htmlFor="op-station" className="text-foreground">АЗС</Label>
+                        <Input id="op-station" placeholder="АЗС СОЮЗ №1" className="bg-input text-foreground" />
                       </div>
                       <div>
-                        <Label htmlFor="price" className="text-foreground">Цена за литр (₽)</Label>
-                        <Input id="price" type="number" placeholder="0.00" className="bg-input text-foreground" />
+                        <Label htmlFor="op-quantity" className="text-foreground">Количество (литры)</Label>
+                        <Input id="op-quantity" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" />
                       </div>
                       <div>
-                        <Label htmlFor="comment" className="text-foreground">Комментарий</Label>
-                        <Input id="comment" placeholder="Описание операции" className="bg-input text-foreground" />
+                        <Label htmlFor="op-price" className="text-foreground">Цена за литр</Label>
+                        <Input id="op-price" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" />
+                      </div>
+                      <div>
+                        <Label htmlFor="op-comment" className="text-foreground">Комментарий</Label>
+                        <Input id="op-comment" placeholder="Комментарий" className="bg-input text-foreground" />
                       </div>
                       <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                         Создать
@@ -470,45 +640,45 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </Dialog>
               </CardHeader>
               <CardContent>
-                <div className="mb-4 flex gap-4">
-                  <div className="flex-1">
+                <div className="mb-4 flex gap-4 flex-wrap">
+                  <div className="flex-1 min-w-[200px]">
                     <Label className="text-foreground mb-2 block">Фильтр по карте</Label>
                     <Select value={filterCard} onValueChange={setFilterCard}>
                       <SelectTrigger className="bg-input text-foreground">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border-2 border-accent">
-                        <SelectItem value="all" className="text-foreground">Все</SelectItem>
+                      <SelectContent>
+                        <SelectItem value="all">Все карты</SelectItem>
                         {uniqueCards.map(card => (
-                          <SelectItem key={card} value={card} className="text-foreground">{card}</SelectItem>
+                          <SelectItem key={card} value={card}>{card}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-[200px]">
                     <Label className="text-foreground mb-2 block">Фильтр по АЗС</Label>
                     <Select value={filterStation} onValueChange={setFilterStation}>
                       <SelectTrigger className="bg-input text-foreground">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border-2 border-accent">
-                        <SelectItem value="all" className="text-foreground">Все</SelectItem>
+                      <SelectContent>
+                        <SelectItem value="all">Все АЗС</SelectItem>
                         {uniqueStations.map(station => (
-                          <SelectItem key={station} value={station} className="text-foreground">{station}</SelectItem>
+                          <SelectItem key={station} value={station}>{station}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-[200px]">
                     <Label className="text-foreground mb-2 block">Фильтр по типу</Label>
                     <Select value={filterOperationType} onValueChange={setFilterOperationType}>
                       <SelectTrigger className="bg-input text-foreground">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border-2 border-accent">
-                        <SelectItem value="all" className="text-foreground">Все</SelectItem>
+                      <SelectContent>
+                        <SelectItem value="all">Все типы</SelectItem>
                         {uniqueOperationTypes.map(type => (
-                          <SelectItem key={type} value={type} className="text-foreground">{type}</SelectItem>
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -518,38 +688,36 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b-2 border-border">
-                        <TableHead className="text-foreground font-bold">Дата/Время</TableHead>
+                        <TableHead className="text-foreground font-bold">Дата и время</TableHead>
                         <TableHead className="text-foreground font-bold">Карта</TableHead>
                         <TableHead className="text-foreground font-bold">АЗС</TableHead>
                         <TableHead className="text-foreground font-bold">Тип</TableHead>
-                        <TableHead className="text-foreground font-bold text-right">Количество (л)</TableHead>
-                        <TableHead className="text-foreground font-bold text-right">Цена (₽)</TableHead>
-                        <TableHead className="text-foreground font-bold text-right">Сумма (₽)</TableHead>
+                        <TableHead className="text-foreground font-bold">Количество (л)</TableHead>
+                        <TableHead className="text-foreground font-bold">Цена</TableHead>
+                        <TableHead className="text-foreground font-bold">Сумма</TableHead>
                         <TableHead className="text-foreground font-bold">Комментарий</TableHead>
                         <TableHead className="text-foreground font-bold">Действия</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredOperations.map((operation) => (
-                        <TableRow key={operation.id} className="border-b border-border">
-                          <TableCell className="py-2 px-3 font-mono text-sm text-muted-foreground">{operation.operation_date}</TableCell>
-                          <TableCell className="py-2 px-3 font-mono text-xl font-bold text-accent">{operation.card_code}</TableCell>
-                          <TableCell className="py-2 px-3 text-foreground">{operation.station_name}</TableCell>
+                      {filteredOperations.map((op) => (
+                        <TableRow key={op.id} className="border-b border-border">
+                          <TableCell className="py-2 px-3 text-foreground font-mono text-sm">{op.operation_date}</TableCell>
+                          <TableCell className="py-2 px-3 font-mono text-accent font-bold">{op.card_code}</TableCell>
+                          <TableCell className="py-2 px-3 text-foreground">{op.station_name}</TableCell>
                           <TableCell className="py-2 px-3">
-                            <Badge className={getOperationColor(operation.operation_type)}>
-                              {operation.operation_type}
-                            </Badge>
+                            <Badge className={getOperationColor(op.operation_type)}>{op.operation_type}</Badge>
                           </TableCell>
-                          <TableCell className="py-2 px-3 text-right font-mono text-foreground">{operation.quantity.toFixed(2)}</TableCell>
-                          <TableCell className="py-2 px-3 text-right font-mono text-foreground">{operation.price.toFixed(2)}</TableCell>
-                          <TableCell className="py-2 px-3 text-right font-mono font-semibold text-foreground">{operation.amount.toFixed(2)}</TableCell>
-                          <TableCell className="py-2 px-3 text-sm text-muted-foreground">{operation.comment}</TableCell>
+                          <TableCell className="py-2 px-3 font-semibold text-accent">{op.quantity.toFixed(2)}</TableCell>
+                          <TableCell className="py-2 px-3 text-foreground">{op.price.toFixed(2)} ₽</TableCell>
+                          <TableCell className="py-2 px-3 font-bold text-accent">{op.amount.toFixed(2)} ₽</TableCell>
+                          <TableCell className="py-2 px-3 text-muted-foreground text-sm">{op.comment}</TableCell>
                           <TableCell className="py-2 px-3">
                             <div className="flex gap-2">
-                              <Button size="sm" variant="outline" onClick={() => handleEditOperation(operation)} className="h-8 w-8 p-0">
+                              <Button size="sm" variant="outline" onClick={() => handleEditOperation(op)} className="h-8 w-8 p-0">
                                 <Icon name="Pencil" size={16} />
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => handleDeleteOperation(operation.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                              <Button size="sm" variant="outline" onClick={() => handleDeleteOperation(op.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
                                 <Icon name="Trash2" size={16} />
                               </Button>
                             </div>
@@ -561,6 +729,98 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Edit Operation Dialog */}
+            <Dialog open={isOperationDialogOpen} onOpenChange={setIsOperationDialogOpen}>
+              <DialogContent className="bg-card border-2 border-accent">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Редактировать операцию</DialogTitle>
+                </DialogHeader>
+                {editingOperation && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="edit-op-card" className="text-foreground">Карта</Label>
+                      <Select value={editingOperation.card_code} onValueChange={(value) => setEditingOperation({...editingOperation, card_code: value})}>
+                        <SelectTrigger className="bg-input text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cards.map(card => (
+                            <SelectItem key={card.id} value={card.card_code}>{card.card_code}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-op-type" className="text-foreground">Тип операции</Label>
+                      <Select value={editingOperation.operation_type} onValueChange={(value) => setEditingOperation({...editingOperation, operation_type: value})}>
+                        <SelectTrigger className="bg-input text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="пополнение">Пополнение</SelectItem>
+                          <SelectItem value="заправка">Заправка</SelectItem>
+                          <SelectItem value="списание">Списание</SelectItem>
+                          <SelectItem value="оприходование">Оприходование</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-op-station" className="text-foreground">АЗС</Label>
+                      <Input 
+                        id="edit-op-station" 
+                        value={editingOperation.station_name}
+                        onChange={(e) => setEditingOperation({...editingOperation, station_name: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-op-date" className="text-foreground">Дата и время</Label>
+                      <Input 
+                        id="edit-op-date" 
+                        value={editingOperation.operation_date}
+                        onChange={(e) => setEditingOperation({...editingOperation, operation_date: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-op-quantity" className="text-foreground">Количество (литры)</Label>
+                      <Input 
+                        id="edit-op-quantity" 
+                        type="number"
+                        step="0.01"
+                        value={editingOperation.quantity}
+                        onChange={(e) => setEditingOperation({...editingOperation, quantity: parseFloat(e.target.value)})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-op-price" className="text-foreground">Цена за литр</Label>
+                      <Input 
+                        id="edit-op-price" 
+                        type="number"
+                        step="0.01"
+                        value={editingOperation.price}
+                        onChange={(e) => setEditingOperation({...editingOperation, price: parseFloat(e.target.value), amount: parseFloat(e.target.value) * editingOperation.quantity})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-op-comment" className="text-foreground">Комментарий</Label>
+                      <Input 
+                        id="edit-op-comment" 
+                        value={editingOperation.comment}
+                        onChange={(e) => setEditingOperation({...editingOperation, comment: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <Button onClick={handleSaveOperation} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      Сохранить
+                    </Button>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="fuel-types">
@@ -574,7 +834,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <DialogTrigger asChild>
                     <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
                       <Icon name="Plus" size={20} className="mr-2" />
-                      Добавить топливо
+                      Добавить вид топлива
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-card border-2 border-accent">
@@ -587,8 +847,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <Input id="fuel-name" placeholder="АИ-92" className="bg-input text-foreground" />
                       </div>
                       <div>
-                        <Label htmlFor="code-1c" className="text-foreground">Код 1С</Label>
-                        <Input id="code-1c" placeholder="100001" className="bg-input text-foreground" />
+                        <Label htmlFor="fuel-code" className="text-foreground">Код 1С</Label>
+                        <Input id="fuel-code" placeholder="100001" className="bg-input text-foreground" />
                       </div>
                       <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                         Создать
@@ -610,7 +870,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <TableBody>
                       {fuelTypes.map((fuel) => (
                         <TableRow key={fuel.id} className="border-b border-border">
-                          <TableCell className="py-2 px-3 text-foreground font-semibold text-lg">{fuel.name}</TableCell>
+                          <TableCell className="py-2 px-3">
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary font-semibold">{fuel.name}</Badge>
+                          </TableCell>
                           <TableCell className="py-2 px-3 font-mono text-accent">{fuel.code_1c}</TableCell>
                           <TableCell className="py-2 px-3">
                             <div className="flex gap-2">
@@ -629,6 +891,40 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Edit Fuel Type Dialog */}
+            <Dialog open={isFuelTypeDialogOpen} onOpenChange={setIsFuelTypeDialogOpen}>
+              <DialogContent className="bg-card border-2 border-accent">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Редактировать вид топлива</DialogTitle>
+                </DialogHeader>
+                {editingFuelType && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="edit-fuel-name" className="text-foreground">Наименование</Label>
+                      <Input 
+                        id="edit-fuel-name" 
+                        value={editingFuelType.name}
+                        onChange={(e) => setEditingFuelType({...editingFuelType, name: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-fuel-code" className="text-foreground">Код 1С</Label>
+                      <Input 
+                        id="edit-fuel-code" 
+                        value={editingFuelType.code_1c}
+                        onChange={(e) => setEditingFuelType({...editingFuelType, code_1c: e.target.value})}
+                        className="bg-input text-foreground" 
+                      />
+                    </div>
+                    <Button onClick={handleSaveFuelType} className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      Сохранить
+                    </Button>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
         </Tabs>
       </main>
