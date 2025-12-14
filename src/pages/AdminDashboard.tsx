@@ -151,6 +151,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
   const [newCard, setNewCard] = useState({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: ''});
+  const [cardSuccessDialog, setCardSuccessDialog] = useState<{open: boolean, card: any}>({open: false, card: null});
   const [filterCardClient, setFilterCardClient] = useState<string>('all');
   const [filterCardFuelType, setFilterCardFuelType] = useState<string>('all');
 
@@ -214,6 +215,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     
     setNewCard({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: ''});
     setIsAddCardDialogOpen(false);
+    setCardSuccessDialog({open: true, card: cardToCreate});
   };
 
   const filteredCards = cards.filter(card => {
@@ -1206,6 +1208,64 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
           <div className="flex justify-end">
             <Button onClick={() => setBalanceChangeDialog({...balanceChangeDialog, open: false})} className="bg-accent text-accent-foreground hover:bg-accent/90">OK</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={cardSuccessDialog.open} onOpenChange={(open) => setCardSuccessDialog({...cardSuccessDialog, open})}>
+        <DialogContent className="bg-card border-2 border-primary max-w-lg">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <Icon name="CheckCircle2" size={28} className="text-primary" />
+              </div>
+              <DialogTitle className="text-2xl text-foreground">Карта успешно создана!</DialogTitle>
+            </div>
+          </DialogHeader>
+          {cardSuccessDialog.card && (
+            <div className="py-4 space-y-4">
+              <div className="p-4 rounded-lg bg-accent/10 border-2 border-accent">
+                <h3 className="text-lg font-bold text-accent mb-3">Данные новой карты:</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Номер карты:</span>
+                    <span className="font-mono text-xl font-bold text-accent">{cardSuccessDialog.card.card_code}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Клиент:</span>
+                    <span className="font-semibold text-foreground">{cardSuccessDialog.card.client_name}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Вид топлива:</span>
+                    <span className="font-semibold text-foreground">{cardSuccessDialog.card.fuel_type}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Начальный баланс:</span>
+                    <span className="font-bold text-primary text-lg">{cardSuccessDialog.card.balance_liters.toFixed(2)} л</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">PIN-код:</span>
+                    <span className="font-mono text-foreground">{cardSuccessDialog.card.pin_code}</span>
+                  </div>
+                </div>
+              </div>
+              {cardSuccessDialog.card.balance_liters > 0 && (
+                <div className="p-3 rounded-lg bg-primary/10 border border-primary">
+                  <div className="flex items-start gap-2">
+                    <Icon name="Info" size={20} className="text-primary mt-0.5" />
+                    <p className="text-sm text-foreground">
+                      Автоматически создана операция пополнения на <strong>{cardSuccessDialog.card.balance_liters.toFixed(2)} л</strong> со Склада
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex justify-end">
+            <Button onClick={() => setCardSuccessDialog({open: false, card: null})} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Icon name="CheckCircle2" size={16} className="mr-2" />
+              Отлично!
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
