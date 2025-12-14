@@ -129,7 +129,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     try:
                         operation_date = datetime.strptime(operation_date_str, '%Y-%m-%d %H:%M:%S')
                     except:
-                        operation_date = datetime.now()
+                        from datetime import timezone, timedelta
+                        tz = timezone(timedelta(hours=3))
+                        operation_date = datetime.now(tz).replace(tzinfo=None)
             
             operation_type = body_data.get('operation_type', '').replace("'", "''")
             quantity = float(body_data.get('quantity', 0))

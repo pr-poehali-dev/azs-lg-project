@@ -324,7 +324,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       
       if (newCard.balance_liters > 0) {
         const now = new Date();
-        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}T${hours}:${minutes}`;
         
         const initialOperation = {
           card_code: newCard.card_code,
