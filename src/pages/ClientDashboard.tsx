@@ -193,33 +193,65 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     }
   };
 
-  const confirmTransfer = () => {
+  const confirmTransfer = async () => {
     if (selectedCardId !== null && targetCardId !== null && transferAmount) {
       const amount = parseFloat(transferAmount);
       const sourceCard = cards.find(c => c.id === selectedCardId);
       const targetCard = cards.find(c => c.id === targetCardId);
       
       if (sourceCard && targetCard && sourceCard.balance_liters >= amount) {
-        const avgPrice = 52.50;
-        
-        addTransferOperations(
-          selectedCardId,
-          targetCardId,
-          amount,
-          avgPrice,
-          sourceCard.card_code,
-          targetCard.card_code
-        );
-        
-        setCards(cards.map(card => {
-          if (card.id === selectedCardId) {
-            return { ...card, balance_liters: card.balance_liters - amount };
-          }
-          if (card.id === targetCardId) {
-            return { ...card, balance_liters: card.balance_liters + amount };
-          }
-          return card;
-        }));
+        try {
+          const avgPrice = 52.50;
+          const now = new Date();
+          const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+          
+          const debitOperation = {
+            card_code: sourceCard.card_code,
+            station_name: 'Склад',
+            operation_date: dateStr,
+            operation_type: 'списание',
+            quantity: amount,
+            price: avgPrice,
+            amount: amount * avgPrice,
+            comment: `Перемещение на карту ${targetCard.card_code}`
+          };
+          
+          const creditOperation = {
+            card_code: targetCard.card_code,
+            station_name: 'Склад',
+            operation_date: dateStr,
+            operation_type: 'оприходование',
+            quantity: amount,
+            price: avgPrice,
+            amount: amount * avgPrice,
+            comment: `Перемещение с карты ${sourceCard.card_code}`
+          };
+          
+          await Promise.all([
+            adminApi.operations.create(debitOperation),
+            adminApi.operations.create(creditOperation),
+            adminApi.cards.update({
+              id: selectedCardId,
+              balance_liters: sourceCard.balance_liters - amount
+            }),
+            adminApi.cards.update({
+              id: targetCardId,
+              balance_liters: targetCard.balance_liters + amount
+            })
+          ]);
+          
+          setCards(cards.map(card => {
+            if (card.id === selectedCardId) {
+              return { ...card, balance_liters: card.balance_liters - amount };
+            }
+            if (card.id === targetCardId) {
+              return { ...card, balance_liters: card.balance_liters + amount };
+            }
+            return card;
+          }));
+        } catch (error) {
+          console.error('Ошибка перемещения топлива:', error);
+        }
         setTransferDialogOpen(false);
       }
     }
