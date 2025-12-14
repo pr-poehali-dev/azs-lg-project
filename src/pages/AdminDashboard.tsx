@@ -58,6 +58,46 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsAddClientDialogOpen(false);
   };
 
+  const [stations, setStations] = useState([
+    { id: 1, name: 'АЗС СОЮЗ №3', code_1c: '200001', address: 'г. Москва, ул. Ленина, д. 10' },
+    { id: 2, name: 'АЗС СОЮЗ №5', code_1c: '200002', address: 'г. Москва, пр-т Мира, д. 25' }
+  ]);
+
+  const [editingStation, setEditingStation] = useState<any>(null);
+  const [isStationDialogOpen, setIsStationDialogOpen] = useState(false);
+  const [isAddStationDialogOpen, setIsAddStationDialogOpen] = useState(false);
+  const [newStation, setNewStation] = useState({name: '', code_1c: '', address: ''});
+
+  const handleDeleteStation = (id: number) => {
+    if (confirm('Удалить АЗС?')) {
+      setStations(stations.filter(s => s.id !== id));
+    }
+  };
+
+  const handleEditStation = (station: any) => {
+    setEditingStation(station);
+    setIsStationDialogOpen(true);
+  };
+
+  const handleSaveStation = () => {
+    if (editingStation) {
+      setStations(stations.map(s => s.id === editingStation.id ? editingStation : s));
+      setIsStationDialogOpen(false);
+      setEditingStation(null);
+    }
+  };
+
+  const handleCreateStation = () => {
+    const newId = stations.length > 0 ? Math.max(...stations.map(s => s.id)) + 1 : 1;
+    setStations([...stations, { id: newId, ...newStation }]);
+    setNewStation({name: '', code_1c: '', address: ''});
+    setIsAddStationDialogOpen(false);
+  };
+
+  const handlePrintStations = () => {
+    window.print();
+  };
+
   const [fuelTypes, setFuelTypes] = useState([
     { id: 1, name: 'АИ-92', code_1c: '100001' },
     { id: 2, name: 'АИ-95', code_1c: '100002' },
@@ -333,6 +373,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <TabsTrigger value="clients" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">Клиенты</TabsTrigger>
             <TabsTrigger value="cards" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">Карты</TabsTrigger>
             <TabsTrigger value="operations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">Операции</TabsTrigger>
+            <TabsTrigger value="stations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">АЗС</TabsTrigger>
             <TabsTrigger value="fuel-types" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">Виды топлива</TabsTrigger>
           </TabsList>
 
@@ -593,7 +634,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-op-station" className="text-right text-foreground">АЗС</Label>
-                            <Input id="new-op-station" value={newOperation.station_name} onChange={(e) => setNewOperation({...newOperation, station_name: e.target.value})} className="col-span-3" />
+                            <Select value={newOperation.station_name} onValueChange={(value) => setNewOperation({...newOperation, station_name: value})}>
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Выберите АЗС" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {stations.map((station) => (
+                                  <SelectItem key={station.id} value={station.name}>{station.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-op-date" className="text-right text-foreground">Дата</Label>
@@ -729,6 +779,87 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </TableBody>
                   </Table>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="stations">
+            <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Icon name="MapPin" className="text-accent" />
+                    АЗС
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    <Button onClick={handlePrintStations} variant="outline" size="sm" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                      <Icon name="Printer" className="w-4 h-4 mr-2" />
+                      Печать
+                    </Button>
+                    <Dialog open={isAddStationDialogOpen} onOpenChange={setIsAddStationDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                          <Icon name="Plus" className="w-4 h-4 mr-2" />
+                          Добавить
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl bg-card border-2 border-primary">
+                        <DialogHeader>
+                          <DialogTitle className="text-foreground">Добавить АЗС</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="new-station-name" className="text-right text-foreground">Наименование</Label>
+                            <Input id="new-station-name" value={newStation.name} onChange={(e) => setNewStation({...newStation, name: e.target.value})} className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="new-station-code" className="text-right text-foreground">Код 1С</Label>
+                            <Input id="new-station-code" value={newStation.code_1c} onChange={(e) => setNewStation({...newStation, code_1c: e.target.value})} className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="new-station-address" className="text-right text-foreground">Адрес</Label>
+                            <Input id="new-station-address" value={newStation.address} onChange={(e) => setNewStation({...newStation, address: e.target.value})} className="col-span-3" />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setIsAddStationDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+                          <Button onClick={handleCreateStation} className="bg-accent text-accent-foreground hover:bg-accent/90">Создать</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b-2 border-border">
+                      <TableHead className="text-foreground font-bold">Наименование</TableHead>
+                      <TableHead className="text-foreground font-bold">Код 1С</TableHead>
+                      <TableHead className="text-foreground font-bold">Адрес</TableHead>
+                      <TableHead className="text-foreground font-bold">Действия</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stations.map((station) => (
+                      <TableRow key={station.id} className="border-b border-border">
+                        <TableCell className="font-medium text-foreground">{station.name}</TableCell>
+                        <TableCell className="font-mono text-muted-foreground">{station.code_1c}</TableCell>
+                        <TableCell className="text-foreground">{station.address}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleEditStation(station)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                              <Icon name="Pencil" className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteStation(station.id)}>
+                              <Icon name="Trash2" className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
@@ -899,7 +1030,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-op-station" className="text-right text-foreground">АЗС</Label>
-                <Input id="edit-op-station" value={editingOperation.station_name} onChange={(e) => setEditingOperation({...editingOperation, station_name: e.target.value})} className="col-span-3" />
+                <Select value={editingOperation.station_name} onValueChange={(value) => setEditingOperation({...editingOperation, station_name: value})}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stations.map((station) => (
+                      <SelectItem key={station.id} value={station.name}>{station.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-op-date" className="text-right text-foreground">Дата</Label>
@@ -964,6 +1104,34 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsFuelTypeDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
             <Button onClick={handleSaveFuelType} className="bg-accent text-accent-foreground hover:bg-accent/90">Сохранить</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isStationDialogOpen} onOpenChange={setIsStationDialogOpen}>
+        <DialogContent className="max-w-2xl bg-card border-2 border-primary">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Редактировать АЗС</DialogTitle>
+          </DialogHeader>
+          {editingStation && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-station-name" className="text-right text-foreground">Наименование</Label>
+                <Input id="edit-station-name" value={editingStation.name} onChange={(e) => setEditingStation({...editingStation, name: e.target.value})} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-station-code" className="text-right text-foreground">Код 1С</Label>
+                <Input id="edit-station-code" value={editingStation.code_1c} onChange={(e) => setEditingStation({...editingStation, code_1c: e.target.value})} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-station-address" className="text-right text-foreground">Адрес</Label>
+                <Input id="edit-station-address" value={editingStation.address} onChange={(e) => setEditingStation({...editingStation, address: e.target.value})} className="col-span-3" />
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsStationDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+            <Button onClick={handleSaveStation} className="bg-accent text-accent-foreground hover:bg-accent/90">Сохранить</Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -51,6 +51,11 @@ export default function CardOperations() {
     { id: 1, card_code: '0001', fuel_type: 'АИ-95', balance_liters: 955.00 }
   ]);
 
+  const [stations] = useState([
+    { id: 1, name: 'АЗС СОЮЗ №3', code_1c: '200001', address: 'г. Москва, ул. Ленина, д. 10' },
+    { id: 2, name: 'АЗС СОЮЗ №5', code_1c: '200002', address: 'г. Москва, пр-т Мира, д. 25' }
+  ]);
+
   const [operations] = useState<Operation[]>([
     {
       id: 1,
