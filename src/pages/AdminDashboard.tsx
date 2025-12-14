@@ -290,6 +290,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
+  const handlePrintTable = (tableName: string) => {
+    window.print();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
       <header className="bg-card border-b-4 border-accent shadow-lg">
@@ -336,13 +340,18 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Icon name="Users" size={28} className="text-accent" />
                   Клиенты
                 </CardTitle>
-                <Dialog open={isAddClientDialogOpen} onOpenChange={setIsAddClientDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-                      <Icon name="Plus" size={20} className="mr-2" />
-                      Добавить клиента
-                    </Button>
-                  </DialogTrigger>
+                <div className="flex gap-2">
+                  <Button onClick={() => handlePrintTable('clients')} variant="outline" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                    <Icon name="Printer" size={20} className="mr-2" />
+                    Печать
+                  </Button>
+                  <Dialog open={isAddClientDialogOpen} onOpenChange={setIsAddClientDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
+                        <Icon name="Plus" size={20} className="mr-2" />
+                        Добавить клиента
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="bg-card border-2 border-accent">
                     <DialogHeader>
                       <DialogTitle className="text-foreground">Новый клиент</DialogTitle>
@@ -503,7 +512,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Icon name="CreditCard" size={28} className="text-accent" />
                   Топливные карты
                 </CardTitle>
-                <Dialog open={isAddCardDialogOpen} onOpenChange={setIsAddCardDialogOpen}>
+                <div className="flex gap-2">
+                  <Button onClick={() => handlePrintTable('cards')} variant="outline" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                    <Icon name="Printer" size={20} className="mr-2" />
+                    Печать
+                  </Button>
+                  <Dialog open={isAddCardDialogOpen} onOpenChange={setIsAddCardDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
                       <Icon name="Plus" size={20} className="mr-2" />
@@ -559,6 +573,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
                   </DialogContent>
                 </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 grid grid-cols-2 gap-4">
@@ -710,7 +725,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Icon name="History" size={28} className="text-accent" />
                   Операции
                 </CardTitle>
-                <Dialog open={isAddOperationDialogOpen} onOpenChange={setIsAddOperationDialogOpen}>
+                <div className="flex gap-2">
+                  <Button onClick={() => handlePrintTable('operations')} variant="outline" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                    <Icon name="Printer" size={20} className="mr-2" />
+                    Печать
+                  </Button>
+                  <Dialog open={isAddOperationDialogOpen} onOpenChange={setIsAddOperationDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
                       <Icon name="Plus" size={20} className="mr-2" />
@@ -785,6 +805,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
                   </DialogContent>
                 </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 flex gap-4 flex-wrap">
@@ -977,7 +998,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Icon name="Droplet" size={28} className="text-accent" />
                   Виды топлива
                 </CardTitle>
-                <Dialog open={isAddFuelTypeDialogOpen} onOpenChange={setIsAddFuelTypeDialogOpen}>
+                <div className="flex gap-2">
+                  <Button onClick={() => handlePrintTable('fuel-types')} variant="outline" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                    <Icon name="Printer" size={20} className="mr-2" />
+                    Печать
+                  </Button>
+                  <Dialog open={isAddFuelTypeDialogOpen} onOpenChange={setIsAddFuelTypeDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
                       <Icon name="Plus" size={20} className="mr-2" />
@@ -1003,6 +1029,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
                   </DialogContent>
                 </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
