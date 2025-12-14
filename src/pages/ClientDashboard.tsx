@@ -54,10 +54,12 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [unblockDialogOpen, setUnblockDialogOpen] = useState(false);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
   const [targetCardId, setTargetCardId] = useState<number | null>(null);
+  const [newDailyLimit, setNewDailyLimit] = useState('');
 
   const handleViewCardOperations = (cardId: number) => {
     navigate(`/card-operations?cardId=${cardId}`);
@@ -79,6 +81,13 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     setTransferAmount('');
     setTargetCardId(null);
     setTransferDialogOpen(true);
+  };
+
+  const handleEditLimit = (cardId: number) => {
+    setSelectedCardId(cardId);
+    const card = cards.find(c => c.id === cardId);
+    setNewDailyLimit(card?.daily_limit.toString() || '');
+    setLimitDialogOpen(true);
   };
 
   const confirmBlock = () => {
@@ -131,6 +140,20 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
           return card;
         }));
         setTransferDialogOpen(false);
+      }
+    }
+  };
+
+  const confirmLimitChange = () => {
+    if (selectedCardId !== null && newDailyLimit) {
+      const limit = parseFloat(newDailyLimit);
+      if (limit > 0) {
+        setCards(cards.map(card => 
+          card.id === selectedCardId 
+            ? { ...card, daily_limit: limit }
+            : card
+        ));
+        setLimitDialogOpen(false);
       }
     }
   };
@@ -216,7 +239,17 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
                     </TableCell>
                     <TableCell className="text-foreground py-2">{card.fuel_type}</TableCell>
                     <TableCell className="text-right font-bold text-accent py-2">{card.balance_liters.toFixed(2)}</TableCell>
-                    <TableCell className="text-right text-foreground py-2">{card.daily_limit.toFixed(2)}</TableCell>
+                    <TableCell className="text-right text-foreground py-2">
+                      {card.daily_limit.toFixed(2)}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="ml-2 h-6 w-6 p-0"
+                        onClick={() => handleEditLimit(card.id)}
+                      >
+                        <Icon name="Pencil" size={14} />
+                      </Button>
+                    </TableCell>
                     <TableCell className="py-2">
                       <Badge className={card.status === 'активна' ? 'bg-primary text-primary-foreground' : 'bg-destructive text-destructive-foreground'}>
                         {card.status}
@@ -393,6 +426,47 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
               disabled={!targetCardId || !transferAmount || parseFloat(transferAmount) <= 0 || parseFloat(transferAmount) > (selectedCard?.balance_liters || 0)}
             >
               Переместить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Изменить дневной лимит</DialogTitle>
+            <DialogDescription>
+              Карта {selectedCard?.card_code}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedCard && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Текущий лимит: <strong className="text-accent">{selectedCard.daily_limit.toFixed(2)} л</strong>
+                </p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="new-limit">Новый дневной лимит (литров)</Label>
+              <Input
+                id="new-limit"
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="Введите новый лимит"
+                value={newDailyLimit}
+                onChange={(e) => setNewDailyLimit(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLimitDialogOpen(false)}>Отмена</Button>
+            <Button 
+              onClick={confirmLimitChange} 
+              disabled={!newDailyLimit || parseFloat(newDailyLimit) <= 0}
+            >
+              Сохранить
             </Button>
           </DialogFooter>
         </DialogContent>
