@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 import { adminApi } from '@/utils/adminApi';
+import { formatDateForInput } from '@/utils/dateUtils';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -323,13 +324,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       await adminApi.cards.create(newCard);
       
       if (newCard.balance_liters > 0) {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}T${hours}:${minutes}`;
+        const dateStr = formatDateForInput();
         
         const initialOperation = {
           card_code: newCard.card_code,

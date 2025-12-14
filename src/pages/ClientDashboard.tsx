@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { useOperations } from '@/contexts/OperationsContext';
 import { adminApi } from '@/utils/adminApi';
+import { formatDateForAPI } from '@/utils/dateUtils';
 
 interface ClientData {
   name: string;
@@ -202,14 +203,7 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
       if (sourceCard && targetCard && sourceCard.balance_liters >= amount) {
         try {
           const avgPrice = 52.50;
-          const now = new Date();
-          const year = now.getFullYear();
-          const month = String(now.getMonth() + 1).padStart(2, '0');
-          const day = String(now.getDate()).padStart(2, '0');
-          const hours = String(now.getHours()).padStart(2, '0');
-          const minutes = String(now.getMinutes()).padStart(2, '0');
-          const seconds = String(now.getSeconds()).padStart(2, '0');
-          const dateStr = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+          const dateStr = formatDateForAPI();
           
           const debitOperation = {
             card_code: sourceCard.card_code,
