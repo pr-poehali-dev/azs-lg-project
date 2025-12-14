@@ -138,20 +138,48 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             card_id = body_data.get('id')
             
-            cursor.execute("""
+            # Динамическое формирование UPDATE запроса только для переданных полей
+            update_fields = []
+            update_values = []
+            
+            if 'card_code' in body_data:
+                update_fields.append('card_code = %s')
+                update_values.append(body_data['card_code'])
+            if 'client_id' in body_data:
+                update_fields.append('client_id = %s')
+                update_values.append(body_data['client_id'])
+            if 'fuel_type_id' in body_data:
+                update_fields.append('fuel_type_id = %s')
+                update_values.append(body_data['fuel_type_id'])
+            if 'balance_liters' in body_data:
+                update_fields.append('balance_liters = %s')
+                update_values.append(body_data['balance_liters'])
+            if 'pin_code' in body_data:
+                update_fields.append('pin_code = %s')
+                update_values.append(body_data['pin_code'])
+            
+            if not update_fields:
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({'error': 'No fields to update'}),
+                    'isBase64Encoded': False
+                }
+            
+            update_values.append(card_id)
+            update_query = f"""
                 UPDATE fuel_cards
-                SET card_code = %s, client_id = %s, fuel_type_id = %s, 
-                    balance_liters = %s, pin_code = %s
+                SET {', '.join(update_fields)}
                 WHERE id = %s
                 RETURNING id, card_code, client_id, fuel_type_id, balance_liters, pin_code
-            """, (
-                body_data.get('card_code'),
-                body_data.get('client_id'),
-                body_data.get('fuel_type_id'),
-                body_data.get('balance_liters'),
-                body_data.get('pin_code'),
-                card_id
-            ))
+            """
+            
+            cursor.execute(update_query, tuple(update_values))
             
             row = cursor.fetchone()
             
