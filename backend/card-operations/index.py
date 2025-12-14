@@ -122,27 +122,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             station_id = station_row[0] if station_row else 'NULL'
             
             operation_date_str = body_data.get('operation_date', '')
-            print(f"[DEBUG] Received operation_date: {operation_date_str}")
             
             if not operation_date_str:
-                operation_date = datetime.now(MSK_TZ).replace(tzinfo=None)
-                print(f"[DEBUG] No date provided, using MSK time: {operation_date}")
+                utc_now = datetime.now(timezone.utc)
+                operation_date = (utc_now + timedelta(hours=3)).replace(tzinfo=None)
             else:
                 try:
                     operation_date = datetime.strptime(operation_date_str, '%Y-%m-%dT%H:%M')
-                    print(f"[DEBUG] Parsed as ISO format: {operation_date}")
                 except:
                     try:
                         operation_date = datetime.strptime(operation_date_str, '%Y-%m-%d %H:%M')
-                        print(f"[DEBUG] Parsed as date time: {operation_date}")
                     except:
                         try:
                             operation_date = datetime.strptime(operation_date_str, '%Y-%m-%d %H:%M:%S')
-                            print(f"[DEBUG] Parsed as full datetime: {operation_date}")
-                        except Exception as e:
-                            print(f"[ERROR] Failed to parse date '{operation_date_str}': {e}")
-                            operation_date = datetime.now(MSK_TZ).replace(tzinfo=None)
-                            print(f"[DEBUG] Using fallback MSK time: {operation_date}")
+                        except:
+                            utc_now = datetime.now(timezone.utc)
+                            operation_date = (utc_now + timedelta(hours=3)).replace(tzinfo=None)
             
             operation_type = body_data.get('operation_type', '').replace("'", "''")
             quantity = float(body_data.get('quantity', 0))
@@ -201,7 +196,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             operation_date_str = body_data.get('operation_date')
             if not operation_date_str:
-                operation_date = datetime.now(MSK_TZ).replace(tzinfo=None)
+                utc_now = datetime.now(timezone.utc)
+                operation_date = (utc_now + timedelta(hours=3)).replace(tzinfo=None)
             else:
                 try:
                     operation_date = datetime.strptime(operation_date_str, '%Y-%m-%d %H:%M')
@@ -212,7 +208,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         try:
                             operation_date = datetime.strptime(operation_date_str, '%Y-%m-%dT%H:%M')
                         except:
-                            operation_date = datetime.now(MSK_TZ).replace(tzinfo=None)
+                            utc_now = datetime.now(timezone.utc)
+                            operation_date = (utc_now + timedelta(hours=3)).replace(tzinfo=None)
             
             cursor.execute("""
                 UPDATE card_operations
