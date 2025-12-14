@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,10 +13,15 @@ interface LoginProps {
 export default function Login({ onLogin }: LoginProps) {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(login, password);
+    if (login === 'admin' && password === 'admin123') {
+      navigate('/admin');
+    } else {
+      navigate('/client');
+    }
   };
 
   return (
