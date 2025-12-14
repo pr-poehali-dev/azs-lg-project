@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 
 interface ClientData {
@@ -17,6 +23,10 @@ interface FuelCard {
   card_code: string;
   fuel_type: string;
   balance_liters: number;
+  daily_limit: number;
+  status: 'активна' | 'заблокирована';
+  block_reason: string;
+  owner: string;
 }
 
 interface ClientDashboardProps {
@@ -33,13 +43,88 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     phone: '+79991234567'
   });
 
-  const [cards] = useState<FuelCard[]>([
-    { id: 1, card_code: '0001', fuel_type: 'АИ-95', balance_liters: 955.00 }
+  const [cards, setCards] = useState<FuelCard[]>([
+    { id: 1, card_code: '0001', fuel_type: 'АИ-95', balance_liters: 955.00, daily_limit: 100, status: 'активна', block_reason: '', owner: 'ООО "Транспортная компания"' },
+    { id: 2, card_code: '0002', fuel_type: 'АИ-95', balance_liters: 500.00, daily_limit: 150, status: 'активна', block_reason: '', owner: 'ООО "Транспортная компания"' },
+    { id: 3, card_code: '0003', fuel_type: 'ДТ', balance_liters: 300.00, daily_limit: 200, status: 'заблокирована', block_reason: 'Утеря карты', owner: 'ООО "Транспортная компания"' }
   ]);
+
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [unblockDialogOpen, setUnblockDialogOpen] = useState(false);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [blockReason, setBlockReason] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [targetCardId, setTargetCardId] = useState<number | null>(null);
 
   const handleViewCardOperations = (cardId: number) => {
     navigate(`/card-operations?cardId=${cardId}`);
   };
+
+  const handleBlockCard = (cardId: number) => {
+    setSelectedCardId(cardId);
+    setBlockReason('');
+    setBlockDialogOpen(true);
+  };
+
+  const handleUnblockCard = (cardId: number) => {
+    setSelectedCardId(cardId);
+    setUnblockDialogOpen(true);
+  };
+
+  const handleTransferCard = (cardId: number) => {
+    setSelectedCardId(cardId);
+    setTransferAmount('');
+    setTargetCardId(null);
+    setTransferDialogOpen(true);
+  };
+
+  const confirmBlock = () => {
+    if (selectedCardId !== null) {
+      setCards(cards.map(card => 
+        card.id === selectedCardId 
+          ? { ...card, status: 'заблокирована', block_reason: blockReason }
+          : card
+      ));
+      setBlockDialogOpen(false);
+    }
+  };
+
+  const confirmUnblock = () => {
+    if (selectedCardId !== null) {
+      setCards(cards.map(card => 
+        card.id === selectedCardId 
+          ? { ...card, status: 'активна', block_reason: '' }
+          : card
+      ));
+      setUnblockDialogOpen(false);
+    }
+  };
+
+  const confirmTransfer = () => {
+    if (selectedCardId !== null && targetCardId !== null && transferAmount) {
+      const amount = parseFloat(transferAmount);
+      const sourceCard = cards.find(c => c.id === selectedCardId);
+      
+      if (sourceCard && sourceCard.balance_liters >= amount) {
+        setCards(cards.map(card => {
+          if (card.id === selectedCardId) {
+            return { ...card, balance_liters: card.balance_liters - amount };
+          }
+          if (card.id === targetCardId) {
+            return { ...card, balance_liters: card.balance_liters + amount };
+          }
+          return card;
+        }));
+        setTransferDialogOpen(false);
+      }
+    }
+  };
+
+  const selectedCard = cards.find(c => c.id === selectedCardId);
+  const availableTargetCards = selectedCard 
+    ? cards.filter(c => c.id !== selectedCardId && c.fuel_type === selectedCard.fuel_type && c.owner === selectedCard.owner)
+    : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
@@ -101,25 +186,71 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
                   <TableHead className="text-foreground font-bold py-2">Номер карты</TableHead>
                   <TableHead className="text-foreground font-bold py-2">Вид топлива</TableHead>
                   <TableHead className="text-foreground font-bold text-right py-2">Баланс (л)</TableHead>
+                  <TableHead className="text-foreground font-bold text-right py-2">Дневной лимит (л)</TableHead>
+                  <TableHead className="text-foreground font-bold py-2">Статус</TableHead>
                   <TableHead className="text-foreground font-bold text-center py-2 no-print">Действия</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {cards.map((card) => (
                   <TableRow key={card.id} className="border-b border-border">
-                    <TableCell className="font-mono text-accent py-2">{card.card_code}</TableCell>
+                    <TableCell className="font-mono text-accent py-2">
+                      {card.card_code}
+                      {card.status === 'заблокирована' && card.block_reason && (
+                        <p className="text-xs text-destructive mt-1">Причина: {card.block_reason}</p>
+                      )}
+                    </TableCell>
                     <TableCell className="text-foreground py-2">{card.fuel_type}</TableCell>
                     <TableCell className="text-right font-bold text-accent py-2">{card.balance_liters.toFixed(2)}</TableCell>
+                    <TableCell className="text-right text-foreground py-2">{card.daily_limit.toFixed(2)}</TableCell>
+                    <TableCell className="py-2">
+                      <Badge className={card.status === 'активна' ? 'bg-primary text-primary-foreground' : 'bg-destructive text-destructive-foreground'}>
+                        {card.status}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-center py-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
-                        onClick={() => handleViewCardOperations(card.id)}
-                      >
-                        <Icon name="Eye" size={16} className="mr-1" />
-                        Показать операции
-                      </Button>
+                      <div className="flex gap-1 justify-center flex-wrap">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => handleViewCardOperations(card.id)}
+                        >
+                          <Icon name="Eye" size={16} className="mr-1" />
+                          Операции
+                        </Button>
+                        {card.status === 'активна' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => handleBlockCard(card.id)}
+                          >
+                            <Icon name="Lock" size={16} className="mr-1" />
+                            Заблокировать
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                            onClick={() => handleUnblockCard(card.id)}
+                          >
+                            <Icon name="Unlock" size={16} className="mr-1" />
+                            Разблокировать
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => handleTransferCard(card.id)}
+                          disabled={card.balance_liters === 0}
+                        >
+                          <Icon name="ArrowRightLeft" size={16} className="mr-1" />
+                          Переместить
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -130,6 +261,128 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
 
 
       </main>
+
+      <Dialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Заблокировать карту</DialogTitle>
+            <DialogDescription>
+              Карта {selectedCard?.card_code} будет заблокирована
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="block-reason">Причина блокировки</Label>
+              <Textarea
+                id="block-reason"
+                placeholder="Укажите причину блокировки карты"
+                value={blockReason}
+                onChange={(e) => setBlockReason(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBlockDialogOpen(false)}>Отмена</Button>
+            <Button onClick={confirmBlock} disabled={!blockReason.trim()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Заблокировать
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={unblockDialogOpen} onOpenChange={setUnblockDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Разблокировать карту</DialogTitle>
+            <DialogDescription>
+              Карта {selectedCard?.card_code} будет разблокирована
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Вы уверены, что хотите разблокировать эту карту?
+            </p>
+            {selectedCard?.block_reason && (
+              <p className="text-sm text-muted-foreground mt-2">
+                <strong>Причина блокировки:</strong> {selectedCard.block_reason}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUnblockDialogOpen(false)}>Отмена</Button>
+            <Button onClick={confirmUnblock} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              Разблокировать
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Переместить топливо</DialogTitle>
+            <DialogDescription>
+              Перемещение топлива с карты {selectedCard?.card_code}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedCard && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Текущий баланс: <strong className="text-accent">{selectedCard.balance_liters.toFixed(2)} л</strong>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Вид топлива: <strong>{selectedCard.fuel_type}</strong>
+                </p>
+              </div>
+            )}
+            {availableTargetCards.length === 0 ? (
+              <p className="text-sm text-destructive">Нет доступных карт для перемещения с таким же владельцем и видом топлива</p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="target-card">Целевая карта</Label>
+                  <Select value={targetCardId?.toString()} onValueChange={(val) => setTargetCardId(parseInt(val))}>
+                    <SelectTrigger id="target-card">
+                      <SelectValue placeholder="Выберите карту" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTargetCards.map((card) => (
+                        <SelectItem key={card.id} value={card.id.toString()}>
+                          {card.card_code} - {card.fuel_type} (Баланс: {card.balance_liters.toFixed(2)} л)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="transfer-amount">Количество литров</Label>
+                  <Input
+                    id="transfer-amount"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max={selectedCard?.balance_liters}
+                    placeholder="Введите количество литров"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>Отмена</Button>
+            <Button 
+              onClick={confirmTransfer} 
+              disabled={!targetCardId || !transferAmount || parseFloat(transferAmount) <= 0 || parseFloat(transferAmount) > (selectedCard?.balance_liters || 0)}
+            >
+              Переместить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

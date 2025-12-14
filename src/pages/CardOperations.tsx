@@ -21,6 +21,10 @@ interface FuelCard {
   card_code: string;
   fuel_type: string;
   balance_liters: number;
+  daily_limit: number;
+  status: 'активна' | 'заблокирована';
+  block_reason: string;
+  owner: string;
 }
 
 interface Operation {
@@ -48,10 +52,13 @@ export default function CardOperations() {
   });
 
   const [cards] = useState<FuelCard[]>([
-    { id: 1, card_code: '0001', fuel_type: 'АИ-95', balance_liters: 955.00 }
+    { id: 1, card_code: '0001', fuel_type: 'АИ-95', balance_liters: 955.00, daily_limit: 100, status: 'активна', block_reason: '', owner: 'ООО "Транспортная компания"' },
+    { id: 2, card_code: '0002', fuel_type: 'АИ-95', balance_liters: 500.00, daily_limit: 150, status: 'активна', block_reason: '', owner: 'ООО "Транспортная компания"' },
+    { id: 3, card_code: '0003', fuel_type: 'ДТ', balance_liters: 300.00, daily_limit: 200, status: 'заблокирована', block_reason: 'Утеря карты', owner: 'ООО "Транспортная компания"' }
   ]);
 
   const [stations] = useState([
+    { id: 0, name: 'Склад', code_1c: '200000', address: 'Центральный склад' },
     { id: 1, name: 'АЗС СОЮЗ №3', code_1c: '200001', address: 'г. Москва, ул. Ленина, д. 10' },
     { id: 2, name: 'АЗС СОЮЗ №5', code_1c: '200002', address: 'г. Москва, пр-т Мира, д. 25' }
   ]);
@@ -175,6 +182,11 @@ export default function CardOperations() {
             <p style={{ margin: '3px 0' }}><strong>Номер карты:</strong> {selectedCardData.card_code}</p>
             <p style={{ margin: '3px 0' }}><strong>Вид топлива:</strong> {selectedCardData.fuel_type}</p>
             <p style={{ margin: '3px 0' }}><strong>Текущий баланс:</strong> {selectedCardData.balance_liters.toFixed(2)} л</p>
+            <p style={{ margin: '3px 0' }}><strong>Дневной лимит:</strong> {selectedCardData.daily_limit.toFixed(2)} л</p>
+            <p style={{ margin: '3px 0' }}><strong>Статус:</strong> {selectedCardData.status}</p>
+            {selectedCardData.status === 'заблокирована' && selectedCardData.block_reason && (
+              <p style={{ margin: '3px 0' }}><strong>Причина блокировки:</strong> {selectedCardData.block_reason}</p>
+            )}
           </div>
         )}
 
