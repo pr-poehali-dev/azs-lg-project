@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import CardOperations from "./pages/CardOperations";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Login onLogin={() => {}} />} />
             <Route path="/client" element={<ClientDashboard clientLogin="client" onLogout={() => window.location.href = '/'} />} />
+            <Route path="/card-operations" element={<CardOperations />} />
             <Route path="/admin" element={<AdminDashboard onLogout={() => window.location.href = '/'} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
