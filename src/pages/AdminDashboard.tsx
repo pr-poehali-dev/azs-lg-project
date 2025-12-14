@@ -150,7 +150,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [editingCard, setEditingCard] = useState<any>(null);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
-  const [newCard, setNewCard] = useState({card_code: '', client_name: '', fuel_type: '', balance_liters: 0, pin_code: ''});
+  const [newCard, setNewCard] = useState({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: ''});
   const [filterCardClient, setFilterCardClient] = useState<string>('all');
   const [filterCardFuelType, setFilterCardFuelType] = useState<string>('all');
 
@@ -175,8 +175,44 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const handleCreateCard = () => {
     const newId = cards.length > 0 ? Math.max(...cards.map(c => c.id)) + 1 : 1;
-    setCards([...cards, { id: newId, ...newCard }]);
-    setNewCard({card_code: '', client_name: '', fuel_type: '', balance_liters: 0, pin_code: ''});
+    const selectedClient = clients.find(c => c.id.toString() === newCard.client_id);
+    const selectedFuelType = fuelTypes.find(f => f.id.toString() === newCard.fuel_type_id);
+    
+    if (!selectedClient || !selectedFuelType) return;
+    
+    const cardToCreate = {
+      id: newId,
+      client_name: selectedClient.name,
+      fuel_type: selectedFuelType.name,
+      balance_liters: newCard.balance_liters,
+      card_code: newCard.card_code,
+      pin_code: newCard.pin_code
+    };
+    
+    setCards([...cards, cardToCreate]);
+    
+    // Если баланс не равен нулю, создаем операцию пополнения
+    if (newCard.balance_liters > 0) {
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const newOperationId = operations.length > 0 ? Math.max(...operations.map(op => op.id)) + 1 : 1;
+      
+      const initialOperation = {
+        id: newOperationId,
+        card_code: newCard.card_code,
+        station_name: 'Склад',
+        operation_date: dateStr,
+        operation_type: 'пополнение',
+        quantity: newCard.balance_liters,
+        price: 0,
+        amount: 0,
+        comment: 'Первоначальное пополнение карты'
+      };
+      
+      setOperations([...operations, initialOperation]);
+    }
+    
+    setNewCard({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: ''});
     setIsAddCardDialogOpen(false);
   };
 
@@ -511,11 +547,33 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-card-client" className="text-right text-foreground">Клиент</Label>
-                            <Input id="new-card-client" value={newCard.client_name} onChange={(e) => setNewCard({...newCard, client_name: e.target.value})} className="col-span-3" />
+                            <Select value={newCard.client_id} onValueChange={(value) => setNewCard({...newCard, client_id: value})}>
+                              <SelectTrigger id="new-card-client" className="col-span-3">
+                                <SelectValue placeholder="Выберите клиента" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {clients.map((client) => (
+                                  <SelectItem key={client.id} value={client.id.toString()}>
+                                    {client.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-card-fuel" className="text-right text-foreground">Вид топлива</Label>
-                            <Input id="new-card-fuel" value={newCard.fuel_type} onChange={(e) => setNewCard({...newCard, fuel_type: e.target.value})} className="col-span-3" />
+                            <Select value={newCard.fuel_type_id} onValueChange={(value) => setNewCard({...newCard, fuel_type_id: value})}>
+                              <SelectTrigger id="new-card-fuel" className="col-span-3">
+                                <SelectValue placeholder="Выберите вид топлива" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {fuelTypes.map((fuelType) => (
+                                  <SelectItem key={fuelType.id} value={fuelType.id.toString()}>
+                                    {fuelType.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-card-balance" className="text-right text-foreground">Баланс (л)</Label>
@@ -528,7 +586,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </div>
                         <div className="flex justify-end gap-2">
                           <Button variant="outline" onClick={() => setIsAddCardDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
-                          <Button onClick={handleCreateCard} className="bg-accent text-accent-foreground hover:bg-accent/90">Создать</Button>
+                          <Button onClick={handleCreateCard} disabled={!newCard.card_code || !newCard.client_id || !newCard.fuel_type_id || !newCard.pin_code} className="bg-accent text-accent-foreground hover:bg-accent/90">Создать</Button>
                         </div>
                       </DialogContent>
                     </Dialog>
