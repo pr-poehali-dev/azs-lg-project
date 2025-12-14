@@ -22,7 +22,7 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Login onLogin={() => {}} />} />
-              <Route path="/client" element={<ClientDashboard clientLogin="client" onLogout={() => window.location.href = '/'} />} />
+              <Route path="/client" element={<ClientDashboard clientLogin="Pioneer78" onLogout={() => window.location.href = '/'} />} />
               <Route path="/card-operations" element={<CardOperations />} />
               <Route path="/admin" element={<AdminDashboard onLogout={() => window.location.href = '/'} />} />
               <Route path="*" element={<NotFound />} />
