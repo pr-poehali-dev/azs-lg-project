@@ -457,9 +457,9 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
                       )}
                     </TableCell>
                     <TableCell className="text-foreground py-2">{card.fuel_type}</TableCell>
-                    <TableCell className="text-right font-bold text-accent py-2">{card.balance_liters.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-bold text-accent py-2">{card.balance_liters.toFixed(3)}</TableCell>
                     <TableCell className="text-right text-foreground py-2">
-                      {card.daily_limit.toFixed(2)}
+                      {card.daily_limit.toFixed(3)}
                       <Button
                         size="sm"
                         variant="ghost"

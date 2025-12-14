@@ -132,10 +132,10 @@ export default function CardOperations() {
       'Дата': op.operation_date,
       'АЗС': op.station_name,
       'Тип операции': op.operation_type,
-      'Количество (л)': op.quantity,
+      'Количество (л)': op.quantity.toFixed(3),
       'Цена (руб/л)': op.price,
       'Сумма (руб)': op.amount,
-      'Баланс после операции (л)': op.balance,
+      'Баланс после операции (л)': op.balance.toFixed(3),
       'Комментарий': op.comment
     }));
 
@@ -229,8 +229,8 @@ export default function CardOperations() {
             <h4 style={{ margin: '5px 0', fontSize: '12pt', fontWeight: 'bold' }}>Информация о карте</h4>
             <p style={{ margin: '3px 0' }}><strong>Номер карты:</strong> {selectedCardData.card_code}</p>
             <p style={{ margin: '3px 0' }}><strong>Вид топлива:</strong> {selectedCardData.fuel_type}</p>
-            <p style={{ margin: '3px 0' }}><strong>Текущий баланс:</strong> {selectedCardData.balance_liters.toFixed(2)} л</p>
-            <p style={{ margin: '3px 0' }}><strong>Дневной лимит:</strong> {selectedCardData.daily_limit.toFixed(2)} л</p>
+            <p style={{ margin: '3px 0' }}><strong>Текущий баланс:</strong> {selectedCardData.balance_liters.toFixed(3)} л</p>
+            <p style={{ margin: '3px 0' }}><strong>Дневной лимит:</strong> {selectedCardData.daily_limit.toFixed(3)} л</p>
             <p style={{ margin: '3px 0' }}><strong>Статус:</strong> {selectedCardData.status}</p>
             {selectedCardData.status === 'заблокирована' && selectedCardData.block_reason && (
               <p style={{ margin: '3px 0' }}><strong>Причина блокировки:</strong> {selectedCardData.block_reason}</p>
@@ -272,7 +272,7 @@ export default function CardOperations() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Баланс</p>
-                    <p className="text-2xl font-bold text-primary">{selectedCardData.balance_liters.toFixed(2)} л</p>
+                    <p className="text-2xl font-bold text-primary">{selectedCardData.balance_liters.toFixed(3)} л</p>
                   </div>
                 </>
               )}
@@ -379,10 +379,10 @@ export default function CardOperations() {
                             {op.operation_type}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-foreground py-2">{op.quantity.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-semibold text-foreground py-2">{op.quantity.toFixed(3)}</TableCell>
                         <TableCell className="text-right text-foreground py-2">{op.price.toFixed(2)}</TableCell>
                         <TableCell className="text-right font-bold text-accent py-2 no-print">{op.amount.toFixed(2)} ₽</TableCell>
-                        <TableCell className="text-right font-bold text-accent py-2">{op.balance.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-bold text-accent py-2">{op.balance.toFixed(3)}</TableCell>
                         <TableCell className="text-muted-foreground text-sm py-2">{op.comment}</TableCell>
                       </TableRow>
                     ))

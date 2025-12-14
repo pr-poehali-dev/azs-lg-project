@@ -730,7 +730,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="font-mono text-accent">{card.card_code}</TableCell>
                         <TableCell className="text-foreground">{card.client_name}</TableCell>
                         <TableCell className="text-foreground">{card.fuel_type}</TableCell>
-                        <TableCell className="font-bold text-accent">{card.balance_liters.toFixed(2)}</TableCell>
+                        <TableCell className="font-bold text-accent">{card.balance_liters.toFixed(3)}</TableCell>
                         <TableCell className="font-mono text-muted-foreground">{card.pin_code}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
@@ -918,7 +918,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               {op.operation_type}
                             </Badge>
                           </TableCell>
-                          <TableCell className="font-semibold text-foreground">{op.quantity.toFixed(2)}</TableCell>
+                          <TableCell className="font-semibold text-foreground">{op.quantity.toFixed(3)}</TableCell>
                           <TableCell className="text-foreground">{op.price.toFixed(2)}</TableCell>
                           <TableCell className="font-bold text-accent">{op.amount.toFixed(2)} ₽</TableCell>
                           <TableCell className="text-muted-foreground text-sm">{op.comment}</TableCell>
