@@ -33,7 +33,7 @@ export default function Login({ onLogin }: LoginProps) {
         
         <div className="w-full max-w-xl">
           <img 
-            src="https://cdn.poehali.dev/files/сеть азс.jpg" 
+            src="https://cdn.poehali.dev/files/сеть азс 2.jpg" 
             alt="Сеть АЗС" 
             className="w-full h-auto object-contain drop-shadow-2xl mix-blend-multiply"
             style={{ backgroundColor: 'transparent' }}
