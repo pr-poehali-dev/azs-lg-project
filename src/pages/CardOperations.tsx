@@ -200,14 +200,6 @@ export default function CardOperations() {
             </CardTitle>
             <div className="flex gap-2 no-print">
               <Button
-                onClick={handleShowAllOperations}
-                variant="outline"
-                className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
-              >
-                <Icon name="RotateCcw" size={16} className="mr-2" />
-                Сбросить фильтры
-              </Button>
-              <Button
                 onClick={handlePrintOperations}
                 variant="outline"
                 className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
