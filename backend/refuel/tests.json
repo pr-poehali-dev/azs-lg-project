@@ -8,7 +8,7 @@
         "card_code": "0001",
         "quantity": 50,
         "price": 52.5,
-        "station_name": "АЗС СОЮЗ №3",
+        "code_1c": "200001",
         "comment": "Заправка автомобиля"
       },
       "expectedStatus": 200,
@@ -28,7 +28,7 @@
       "body": {
         "quantity": 50,
         "price": 52.5,
-        "station_name": "АЗС СОЮЗ №3"
+        "code_1c": "200001"
       },
       "expectedStatus": 400,
       "expectedBody": {
@@ -44,7 +44,7 @@
         "card_code": "0001",
         "quantity": 0,
         "price": 52.5,
-        "station_name": "АЗС СОЮЗ №3"
+        "code_1c": "200001"
       },
       "expectedStatus": 400,
       "expectedBody": {

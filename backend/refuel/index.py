@@ -7,7 +7,7 @@ from datetime import datetime
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Выполнение операции заправки: уменьшение баланса карты и запись в историю операций
-    Args: event - dict с httpMethod, body (card_code, quantity, price, station_name, comment)
+    Args: event - dict с httpMethod, body (card_code, quantity, price, code_1c, comment)
           context - объект с атрибутами request_id, function_name
     Returns: HTTP response dict с результатом операции
     '''
@@ -45,7 +45,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     card_code = body_data.get('card_code', '').strip()
     quantity = body_data.get('quantity', 0)
     price = body_data.get('price', 0)
-    station_name = body_data.get('station_name', '').strip()
+    code_1c = body_data.get('code_1c', '').strip()
     comment = body_data.get('comment', '').strip()
     
     if not card_code:
@@ -62,11 +62,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': 'Количество топлива должно быть больше 0'})
         }
     
-    if not station_name:
+    if not code_1c:
         return {
             'statusCode': 400,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Не указано название АЗС (station_name)'})
+            'body': json.dumps({'error': 'Не указан код АЗС (code_1c)'})
         }
     
     dsn = os.environ.get('DATABASE_URL')
@@ -124,14 +124,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             amount = quantity * price
             operation_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            escaped_station = station_name.replace("'", "''")
+            escaped_code = code_1c.replace("'", "''")
             escaped_comment = comment.replace("'", "''")
             
             cur.execute(f"""
-                SELECT id FROM stations WHERE name = '{escaped_station}' LIMIT 1
+                SELECT id, name FROM stations WHERE code_1c = '{escaped_code}' LIMIT 1
             """)
             station_row = cur.fetchone()
-            station_id = station_row[0] if station_row else 'NULL'
+            
+            if not station_row:
+                conn.rollback()
+                return {
+                    'statusCode': 404,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': f'АЗС с кодом {code_1c} не найдена'})
+                }
+            
+            station_id = station_row[0]
+            station_name = station_row[1]
             
             cur.execute(f"""
                 INSERT INTO card_operations 
@@ -151,6 +161,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'amount': amount,
                 'previous_balance': current_balance,
                 'new_balance': new_balance,
+                'code_1c': code_1c,
                 'station_name': station_name,
                 'operation_date': operation_date
             }
