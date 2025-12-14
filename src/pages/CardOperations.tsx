@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { useOperations } from '@/contexts/OperationsContext';
 import * as XLSX from 'xlsx';
+import { adminApi } from '@/utils/adminApi';
 
 interface ClientData {
   name: string;
@@ -47,6 +48,9 @@ export default function CardOperations() {
   const cardId = parseInt(searchParams.get('cardId') || '1');
   const { operations: contextOperations } = useOperations();
 
+  const [operations, setOperations] = useState<Operation[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [clientData] = useState<ClientData>({
     name: 'ООО "Транспортная компания"',
     inn: '7707083893',
@@ -66,21 +70,39 @@ export default function CardOperations() {
     { id: 2, name: 'АЗС СОЮЗ №5', code_1c: '200002', address: 'г. Москва, пр-т Мира, д. 25' }
   ]);
 
-  const operations = contextOperations;
+  useEffect(() => {
+    const loadOperations = async () => {
+      try {
+        const data = await adminApi.operations.getAll();
+        setOperations(data);
+      } catch (error) {
+        console.error('Ошибка загрузки операций:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadOperations();
+  }, []);
 
   const [selectedCard] = useState<number>(cardId);
   const [selectedStation, setSelectedStation] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
 
-  const uniqueStations = Array.from(new Set(operations.filter(op => op.card_id === selectedCard).map(op => op.station_name)));
+  const selectedCardData = cards.find(c => c.id === selectedCard);
+  
+  const cardOperations = operations.filter(op => {
+    const opCardId = (op as any).fuel_card_id || op.card_id;
+    return opCardId === selectedCard || (selectedCardData && (op as any).card_code === selectedCardData.card_code);
+  });
 
-  const filteredOperations = operations.filter(op => {
-    const matchesCard = op.card_id === selectedCard;
+  const uniqueStations = Array.from(new Set(cardOperations.map(op => op.station_name)));
+
+  const filteredOperations = cardOperations.filter(op => {
     const matchesStation = selectedStation === 'all' || op.station_name === selectedStation;
     const matchesDateFrom = !dateFrom || op.operation_date >= dateFrom;
     const matchesDateTo = !dateTo || op.operation_date <= dateTo + ' 23:59';
-    return matchesCard && matchesStation && matchesDateFrom && matchesDateTo;
+    return matchesStation && matchesDateFrom && matchesDateTo;
   });
 
   const handlePrintOperations = () => {
@@ -126,8 +148,6 @@ export default function CardOperations() {
         return 'bg-muted text-muted-foreground';
     }
   };
-
-  const selectedCardData = cards.find(c => c.id === selectedCard);
 
   const operationsWithBalance = filteredOperations.map((op, index) => {
     let runningBalance = 0;
@@ -293,8 +313,13 @@ export default function CardOperations() {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <Table>
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Загрузка операций...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
                 <TableHeader>
                   <TableRow className="border-b-2 border-border">
                     <TableHead className="text-foreground font-bold py-2">АЗС</TableHead>
@@ -333,8 +358,9 @@ export default function CardOperations() {
                     ))
                   )}
                 </TableBody>
-              </Table>
-            </div>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
