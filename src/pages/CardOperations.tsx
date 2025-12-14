@@ -50,39 +50,57 @@ export default function CardOperations() {
 
   const [operations, setOperations] = useState<Operation[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [clientData] = useState<ClientData>({
-    name: 'ООО "Транспортная компания"',
-    inn: '7707083893',
-    email: 'info@transport.ru',
-    phone: '+79991234567'
-  });
-
-  const [cards] = useState<FuelCard[]>([
-    { id: 1, card_code: '0001', fuel_type: 'АИ-95', balance_liters: 955.00, daily_limit: 100, status: 'активна', block_reason: '', owner: 'ООО "Транспортная компания"' },
-    { id: 2, card_code: '0002', fuel_type: 'АИ-95', balance_liters: 500.00, daily_limit: 150, status: 'активна', block_reason: '', owner: 'ООО "Транспортная компания"' },
-    { id: 3, card_code: '0003', fuel_type: 'ДТ', balance_liters: 300.00, daily_limit: 200, status: 'заблокирована', block_reason: 'Утеря карты', owner: 'ООО "Транспортная компания"' }
-  ]);
-
-  const [stations] = useState([
-    { id: 0, name: 'Склад', code_1c: '200000', address: 'Центральный склад' },
-    { id: 1, name: 'АЗС СОЮЗ №3', code_1c: '200001', address: 'г. Москва, ул. Ленина, д. 10' },
-    { id: 2, name: 'АЗС СОЮЗ №5', code_1c: '200002', address: 'г. Москва, пр-т Мира, д. 25' }
-  ]);
+  const [clientData, setClientData] = useState<ClientData | null>(null);
+  const [cards, setCards] = useState<FuelCard[]>([]);
+  const [stations, setStations] = useState<any[]>([]);
 
   useEffect(() => {
-    const loadOperations = async () => {
+    const loadData = async () => {
       try {
-        const data = await adminApi.operations.getAll();
-        setOperations(data);
+        const [operationsData, cardsData, fuelTypesData, clientsData, stationsData] = await Promise.all([
+          adminApi.operations.getAll(),
+          adminApi.cards.getAll(),
+          adminApi.fuelTypes.getAll(),
+          adminApi.clients.getAll(),
+          adminApi.stations.getAll()
+        ]);
+        
+        setOperations(operationsData);
+        setStations(stationsData);
+        
+        const card = cardsData.find((c: any) => c.id === cardId);
+        if (card) {
+          const fuelType = fuelTypesData.find((ft: any) => ft.id === card.fuel_type_id);
+          const client = clientsData.find((cl: any) => cl.id === card.client_id);
+          
+          if (client) {
+            setClientData({
+              name: client.name,
+              inn: client.inn,
+              email: client.email,
+              phone: client.phone
+            });
+          }
+          
+          setCards([{
+            id: card.id,
+            card_code: card.card_code,
+            fuel_type: fuelType?.name || '',
+            balance_liters: card.balance_liters,
+            daily_limit: card.daily_limit || 0,
+            status: card.status,
+            block_reason: card.block_reason || '',
+            owner: client?.name || ''
+          }]);
+        }
       } catch (error) {
-        console.error('Ошибка загрузки операций:', error);
+        console.error('Ошибка загрузки данных:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadOperations();
-  }, []);
+    loadData();
+  }, [cardId]);
 
   const [selectedCard] = useState<number>(cardId);
   const [selectedStation, setSelectedStation] = useState<string>('all');
@@ -190,11 +208,13 @@ export default function CardOperations() {
           <h3 style={{ margin: '5px 0', fontSize: '14pt' }}>История операций по топливной карте</h3>
         </div>
         
-        <div style={{ marginBottom: '15px', padding: '10px', border: '1px solid #333' }}>
-          <h4 style={{ margin: '5px 0', fontSize: '12pt', fontWeight: 'bold' }}>Информация о клиенте</h4>
-          <p style={{ margin: '3px 0' }}><strong>Клиент:</strong> {clientData.name}</p>
-          <p style={{ margin: '3px 0' }}><strong>ИНН:</strong> {clientData.inn}</p>
-        </div>
+        {clientData && (
+          <div style={{ marginBottom: '15px', padding: '10px', border: '1px solid #333' }}>
+            <h4 style={{ margin: '5px 0', fontSize: '12pt', fontWeight: 'bold' }}>Информация о клиенте</h4>
+            <p style={{ margin: '3px 0' }}><strong>Клиент:</strong> {clientData.name}</p>
+            <p style={{ margin: '3px 0' }}><strong>ИНН:</strong> {clientData.inn}</p>
+          </div>
+        )}
 
         {selectedCardData && (
           <div style={{ marginBottom: '15px', padding: '10px', border: '1px solid #333', backgroundColor: '#f5f5f5' }}>
@@ -224,11 +244,13 @@ export default function CardOperations() {
         <Card className="border-2 border-accent bg-card/95 backdrop-blur-sm no-print">
           <CardContent className="py-4">
             <div className="grid md:grid-cols-4 gap-4 items-center">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Клиент</p>
-                <p className="text-sm font-semibold text-foreground">{clientData.name}</p>
-                <p className="text-xs text-muted-foreground">ИНН: {clientData.inn}</p>
-              </div>
+              {clientData && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Клиент</p>
+                  <p className="text-sm font-semibold text-foreground">{clientData.name}</p>
+                  <p className="text-xs text-muted-foreground">ИНН: {clientData.inn}</p>
+                </div>
+              )}
               
               {selectedCardData && (
                 <>

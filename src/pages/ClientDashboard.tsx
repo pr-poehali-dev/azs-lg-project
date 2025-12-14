@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { useOperations } from '@/contexts/OperationsContext';
+import { adminApi } from '@/utils/adminApi';
 
 interface ClientData {
   name: string;
@@ -39,6 +40,9 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
   const navigate = useNavigate();
   const { addTransferOperations } = useOperations();
   const [isFromAdmin, setIsFromAdmin] = useState(false);
+  const [clientData, setClientData] = useState<ClientData | null>(null);
+  const [cards, setCards] = useState<FuelCard[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const referrer = document.referrer;
@@ -48,18 +52,56 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
       sessionStorage.setItem('fromAdmin', 'true');
     }
   }, []);
-  const [clientData] = useState<ClientData>({
-    name: 'ООО "Транспортная компания"',
-    inn: '7707083893',
-    email: 'info@transport.ru',
-    phone: '+79991234567'
-  });
 
-  const [cards, setCards] = useState<FuelCard[]>([
-    { id: 1, card_code: '0001', fuel_type: 'АИ-95', balance_liters: 955.00, daily_limit: 100, status: 'активна', block_reason: '', owner: 'ООО "Транспортная компания"' },
-    { id: 2, card_code: '0002', fuel_type: 'АИ-95', balance_liters: 500.00, daily_limit: 150, status: 'активна', block_reason: '', owner: 'ООО "Транспортная компания"' },
-    { id: 3, card_code: '0003', fuel_type: 'ДТ', balance_liters: 300.00, daily_limit: 200, status: 'заблокирована', block_reason: 'Утеря карты', owner: 'ООО "Транспортная компания"' }
-  ]);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [clientsData, cardsData, fuelTypesData] = await Promise.all([
+          adminApi.clients.getAll(),
+          adminApi.cards.getAll(),
+          adminApi.fuelTypes.getAll()
+        ]);
+        
+        const client = clientsData.find((c: any) => c.login === clientLogin);
+        if (client) {
+          setClientData({
+            name: client.name,
+            inn: client.inn,
+            email: client.email,
+            phone: client.phone
+          });
+        }
+        
+        const clientCards = cardsData
+          .filter((card: any) => {
+            const cardClient = clientsData.find((c: any) => c.id === card.client_id);
+            return cardClient?.login === clientLogin;
+          })
+          .map((card: any) => {
+            const fuelType = fuelTypesData.find((ft: any) => ft.id === card.fuel_type_id);
+            const cardClient = clientsData.find((c: any) => c.id === card.client_id);
+            return {
+              id: card.id,
+              card_code: card.card_code,
+              fuel_type: fuelType?.name || '',
+              balance_liters: card.balance_liters,
+              daily_limit: card.daily_limit || 0,
+              status: card.status,
+              block_reason: card.block_reason || '',
+              owner: cardClient?.name || ''
+            };
+          });
+        
+        setCards(clientCards);
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [clientLogin]);
 
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [unblockDialogOpen, setUnblockDialogOpen] = useState(false);
@@ -103,24 +145,50 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     setLimitDialogOpen(true);
   };
 
-  const confirmBlock = () => {
+  const confirmBlock = async () => {
     if (selectedCardId !== null) {
-      setCards(cards.map(card => 
-        card.id === selectedCardId 
-          ? { ...card, status: 'заблокирована', block_reason: blockReason }
-          : card
-      ));
+      try {
+        const card = cards.find(c => c.id === selectedCardId);
+        if (card) {
+          await adminApi.cards.update({
+            id: selectedCardId,
+            status: 'заблокирована',
+            block_reason: blockReason
+          });
+          
+          setCards(cards.map(c => 
+            c.id === selectedCardId 
+              ? { ...c, status: 'заблокирована', block_reason: blockReason }
+              : c
+          ));
+        }
+      } catch (error) {
+        console.error('Ошибка блокировки карты:', error);
+      }
       setBlockDialogOpen(false);
     }
   };
 
-  const confirmUnblock = () => {
+  const confirmUnblock = async () => {
     if (selectedCardId !== null) {
-      setCards(cards.map(card => 
-        card.id === selectedCardId 
-          ? { ...card, status: 'активна', block_reason: '' }
-          : card
-      ));
+      try {
+        const card = cards.find(c => c.id === selectedCardId);
+        if (card) {
+          await adminApi.cards.update({
+            id: selectedCardId,
+            status: 'активна',
+            block_reason: ''
+          });
+          
+          setCards(cards.map(c => 
+            c.id === selectedCardId 
+              ? { ...c, status: 'активна', block_reason: '' }
+              : c
+          ));
+        }
+      } catch (error) {
+        console.error('Ошибка разблокировки карты:', error);
+      }
       setUnblockDialogOpen(false);
     }
   };
@@ -157,15 +225,24 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     }
   };
 
-  const confirmLimitChange = () => {
+  const confirmLimitChange = async () => {
     if (selectedCardId !== null && newDailyLimit) {
       const limit = parseFloat(newDailyLimit);
       if (limit > 0) {
-        setCards(cards.map(card => 
-          card.id === selectedCardId 
+        try {
+          await adminApi.cards.update({
+            id: selectedCardId,
+            daily_limit: limit
+          });
+          
+          setCards(cards.map(card => 
+            card.id === selectedCardId 
             ? { ...card, daily_limit: limit }
             : card
-        ));
+          ));
+        } catch (error) {
+          console.error('Ошибка изменения лимита:', error);
+        }
         setLimitDialogOpen(false);
       }
     }
@@ -219,31 +296,37 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
-          <CardContent className="py-3">
-            <div className="flex items-center gap-6">
-              <Icon name="Building2" size={20} className="text-accent flex-shrink-0" />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-1 flex-1 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Клиент:</span>{' '}
-                  <span className="font-semibold text-foreground">{clientData.name}</span>
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Загрузка данных...</p>
+          </div>
+        ) : clientData ? (
+          <>
+            <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
+              <CardContent className="py-3">
+                <div className="flex items-center gap-6">
+                  <Icon name="Building2" size={20} className="text-accent flex-shrink-0" />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-1 flex-1 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Клиент:</span>{' '}
+                      <span className="font-semibold text-foreground">{clientData.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">ИНН:</span>{' '}
+                      <span className="font-semibold text-foreground">{clientData.inn}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>{' '}
+                      <span className="font-semibold text-foreground">{clientData.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Телефон:</span>{' '}
+                      <span className="font-semibold text-foreground">{clientData.phone}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">ИНН:</span>{' '}
-                  <span className="font-semibold text-foreground">{clientData.inn}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Email:</span>{' '}
-                  <span className="font-semibold text-foreground">{clientData.email}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Телефон:</span>{' '}
-                  <span className="font-semibold text-foreground">{clientData.phone}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
         <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
           <CardHeader>
@@ -410,8 +493,12 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
             </Table>
           </CardContent>
         </Card>
-
-
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Клиент не найден</p>
+          </div>
+        )}
       </main>
 
       <Dialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
