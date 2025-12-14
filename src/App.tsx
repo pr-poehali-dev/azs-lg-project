@@ -12,6 +12,17 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const ClientRoute = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const clientLogin = user.login || '';
+  
+  if (!clientLogin) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <ClientDashboard clientLogin={clientLogin} onLogout={() => window.location.href = '/'} />;
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -22,7 +33,7 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Login onLogin={() => {}} />} />
-              <Route path="/client" element={<ClientDashboard clientLogin="Pioneer78" onLogout={() => window.location.href = '/'} />} />
+              <Route path="/client" element={<ClientRoute />} />
               <Route path="/card-operations" element={<CardOperations />} />
               <Route path="/admin" element={<AdminDashboard onLogout={() => window.location.href = '/'} />} />
               <Route path="*" element={<NotFound />} />
