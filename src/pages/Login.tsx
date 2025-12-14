@@ -35,6 +35,7 @@ export default function Login({ onLogin }: LoginProps) {
 
       if (response.ok && data.success) {
         localStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.removeItem('fromAdmin');
         
         if (data.user.admin) {
           navigate('/admin');
