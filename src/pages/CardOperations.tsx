@@ -76,15 +76,19 @@ export default function CardOperations() {
     }
   ]);
 
-  const [selectedCard, setSelectedCard] = useState<number>(cardId);
+  const [selectedCard] = useState<number>(cardId);
+  const [selectedStation, setSelectedStation] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
 
+  const uniqueStations = Array.from(new Set(operations.filter(op => op.card_id === selectedCard).map(op => op.station_name)));
+
   const filteredOperations = operations.filter(op => {
     const matchesCard = op.card_id === selectedCard;
+    const matchesStation = selectedStation === 'all' || op.station_name === selectedStation;
     const matchesDateFrom = !dateFrom || op.operation_date >= dateFrom;
     const matchesDateTo = !dateTo || op.operation_date <= dateTo + ' 23:59';
-    return matchesCard && matchesDateFrom && matchesDateTo;
+    return matchesCard && matchesStation && matchesDateFrom && matchesDateTo;
   });
 
   const handlePrintOperations = () => {
@@ -212,15 +216,16 @@ export default function CardOperations() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 no-print">
               <div className="space-y-2">
-                <Label className="text-foreground">Фильтр по карте</Label>
-                <Select value={selectedCard.toString()} onValueChange={(val) => setSelectedCard(parseInt(val))}>
+                <Label className="text-foreground">Фильтр по АЗС</Label>
+                <Select value={selectedStation} onValueChange={setSelectedStation}>
                   <SelectTrigger className="bg-input border-2 border-border text-foreground">
-                    <SelectValue placeholder="Выберите карту" />
+                    <SelectValue placeholder="Все АЗС" />
                   </SelectTrigger>
                   <SelectContent>
-                    {cards.map((card) => (
-                      <SelectItem key={card.id} value={card.id.toString()}>
-                        {card.card_code} - {card.fuel_type}
+                    <SelectItem value="all">Все АЗС</SelectItem>
+                    {uniqueStations.map((station) => (
+                      <SelectItem key={station} value={station}>
+                        {station}
                       </SelectItem>
                     ))}
                   </SelectContent>
