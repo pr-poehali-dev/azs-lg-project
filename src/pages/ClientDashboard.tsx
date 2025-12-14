@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,16 @@ interface ClientDashboardProps {
 export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboardProps) {
   const navigate = useNavigate();
   const { addTransferOperations } = useOperations();
+  const [isFromAdmin, setIsFromAdmin] = useState(false);
+
+  useEffect(() => {
+    const referrer = document.referrer;
+    const fromAdmin = referrer.includes('/admin') || sessionStorage.getItem('fromAdmin') === 'true';
+    setIsFromAdmin(fromAdmin);
+    if (fromAdmin) {
+      sessionStorage.setItem('fromAdmin', 'true');
+    }
+  }, []);
   const [clientData] = useState<ClientData>({
     name: 'ООО "Транспортная компания"',
     inn: '7707083893',
@@ -186,10 +196,25 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
               <p className="text-sm text-muted-foreground">Кабинет клиента</p>
             </div>
           </div>
-          <Button onClick={onLogout} variant="outline" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
-            <Icon name="LogOut" size={20} className="mr-2" />
-            Выход
-          </Button>
+          <div className="flex gap-2">
+            {isFromAdmin && (
+              <Button 
+                onClick={() => {
+                  sessionStorage.removeItem('fromAdmin');
+                  navigate('/admin');
+                }} 
+                variant="outline" 
+                className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground"
+              >
+                <Icon name="ArrowLeft" size={20} className="mr-2" />
+                Админпанель
+              </Button>
+            )}
+            <Button onClick={onLogout} variant="outline" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+              <Icon name="LogOut" size={20} className="mr-2" />
+              Выход
+            </Button>
+          </div>
         </div>
       </header>
 

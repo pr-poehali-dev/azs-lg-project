@@ -499,7 +499,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="font-mono text-foreground">{client.inn}</TableCell>
                         <TableCell 
                           className="font-medium text-accent cursor-pointer hover:underline transition-all"
-                          onClick={() => navigate('/client')}
+                          onClick={() => {
+                            sessionStorage.setItem('fromAdmin', 'true');
+                            navigate('/client');
+                          }}
                           title="Перейти в кабинет клиента"
                         >
                           {client.name}
