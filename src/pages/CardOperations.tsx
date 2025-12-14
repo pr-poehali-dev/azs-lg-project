@@ -122,6 +122,19 @@ export default function CardOperations() {
 
   const selectedCardData = cards.find(c => c.id === selectedCard);
 
+  const operationsWithBalance = filteredOperations.map((op, index) => {
+    let runningBalance = 0;
+    for (let i = 0; i <= index; i++) {
+      const currentOp = filteredOperations[i];
+      if (currentOp.operation_type === 'пополнение' || currentOp.operation_type === 'оприходование') {
+        runningBalance += currentOp.quantity;
+      } else if (currentOp.operation_type === 'заправка' || currentOp.operation_type === 'списание') {
+        runningBalance -= currentOp.quantity;
+      }
+    }
+    return { ...op, balance: runningBalance };
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
       <header className="bg-card border-b-4 border-accent shadow-lg">
@@ -145,19 +158,34 @@ export default function CardOperations() {
       </header>
 
       <div className="print-header" style={{ display: 'none' }}>
-        <h2>СЕТЬ АВТОЗАПРАВОЧНЫХ СТАНЦИЙ "СОЮЗ"</h2>
-        <h2>История операций по топливной карте</h2>
-        <p><strong>Клиент:</strong> {clientData.name}</p>
-        <p><strong>ИНН:</strong> {clientData.inn}</p>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2 style={{ margin: '5px 0', fontSize: '16pt', fontWeight: 'bold' }}>СЕТЬ АВТОЗАПРАВОЧНЫХ СТАНЦИЙ "СОЮЗ"</h2>
+          <h3 style={{ margin: '5px 0', fontSize: '14pt' }}>История операций по топливной карте</h3>
+        </div>
+        
+        <div style={{ marginBottom: '15px', padding: '10px', border: '1px solid #333' }}>
+          <h4 style={{ margin: '5px 0', fontSize: '12pt', fontWeight: 'bold' }}>Информация о клиенте</h4>
+          <p style={{ margin: '3px 0' }}><strong>Клиент:</strong> {clientData.name}</p>
+          <p style={{ margin: '3px 0' }}><strong>ИНН:</strong> {clientData.inn}</p>
+        </div>
+
         {selectedCardData && (
-          <>
-            <p><strong>Номер карты:</strong> {selectedCardData.card_code}</p>
-            <p><strong>Вид топлива:</strong> {selectedCardData.fuel_type}</p>
-            <p><strong>Текущий баланс:</strong> {selectedCardData.balance_liters.toFixed(2)} л</p>
-          </>
+          <div style={{ marginBottom: '15px', padding: '10px', border: '1px solid #333', backgroundColor: '#f5f5f5' }}>
+            <h4 style={{ margin: '5px 0', fontSize: '12pt', fontWeight: 'bold' }}>Информация о карте</h4>
+            <p style={{ margin: '3px 0' }}><strong>Номер карты:</strong> {selectedCardData.card_code}</p>
+            <p style={{ margin: '3px 0' }}><strong>Вид топлива:</strong> {selectedCardData.fuel_type}</p>
+            <p style={{ margin: '3px 0' }}><strong>Текущий баланс:</strong> {selectedCardData.balance_liters.toFixed(2)} л</p>
+          </div>
         )}
-        {dateFrom && <p><strong>Период с:</strong> {dateFrom}</p>}
-        {dateTo && <p><strong>Период по:</strong> {dateTo}</p>}
+
+        {(selectedStation !== 'all' || dateFrom || dateTo) && (
+          <div style={{ marginBottom: '15px', padding: '10px', border: '1px solid #333' }}>
+            <h4 style={{ margin: '5px 0', fontSize: '12pt', fontWeight: 'bold' }}>Фильтры</h4>
+            {selectedStation !== 'all' && <p style={{ margin: '3px 0' }}><strong>АЗС:</strong> {selectedStation}</p>}
+            {dateFrom && <p style={{ margin: '3px 0' }}><strong>Период с:</strong> {dateFrom}</p>}
+            {dateTo && <p style={{ margin: '3px 0' }}><strong>Период по:</strong> {dateTo}</p>}
+          </div>
+        )}
       </div>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
@@ -277,7 +305,7 @@ export default function CardOperations() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredOperations.map((op) => (
+                    operationsWithBalance.map((op) => (
                       <TableRow key={op.id} className="border-b border-border">
                         <TableCell className="text-foreground py-2">{op.station_name}</TableCell>
                         <TableCell className="text-muted-foreground text-sm py-2">{op.operation_date}</TableCell>
@@ -288,7 +316,8 @@ export default function CardOperations() {
                         </TableCell>
                         <TableCell className="text-right font-semibold text-foreground py-2">{op.quantity.toFixed(2)}</TableCell>
                         <TableCell className="text-right text-foreground py-2">{op.price.toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-bold text-accent py-2">{op.amount.toFixed(2)} ₽</TableCell>
+                        <TableCell className="text-right font-bold text-accent py-2 no-print">{op.amount.toFixed(2)} ₽</TableCell>
+                        <TableCell className="text-right font-bold text-accent py-2">{op.balance.toFixed(2)}</TableCell>
                         <TableCell className="text-muted-foreground text-sm py-2">{op.comment}</TableCell>
                       </TableRow>
                     ))
