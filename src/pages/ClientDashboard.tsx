@@ -61,6 +61,8 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
   const [targetCardId, setTargetCardId] = useState<number | null>(null);
   const [newDailyLimit, setNewDailyLimit] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'активна' | 'заблокирована'>('all');
+  const [fuelTypeFilter, setFuelTypeFilter] = useState<string>('all');
+  const [cardSearch, setCardSearch] = useState('');
 
   const handleViewCardOperations = (cardId: number) => {
     navigate(`/card-operations?cardId=${cardId}`);
@@ -164,9 +166,14 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     ? cards.filter(c => c.id !== selectedCardId && c.fuel_type === selectedCard.fuel_type && c.owner === selectedCard.owner)
     : [];
 
-  const filteredCards = statusFilter === 'all' 
-    ? cards 
-    : cards.filter(card => card.status === statusFilter);
+  const uniqueFuelTypes = Array.from(new Set(cards.map(card => card.fuel_type)));
+
+  const filteredCards = cards.filter(card => {
+    const matchesStatus = statusFilter === 'all' || card.status === statusFilter;
+    const matchesFuelType = fuelTypeFilter === 'all' || card.fuel_type === fuelTypeFilter;
+    const matchesSearch = cardSearch === '' || card.card_code.toLowerCase().includes(cardSearch.toLowerCase());
+    return matchesStatus && matchesFuelType && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
@@ -188,28 +195,27 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl text-foreground flex items-center gap-2">
-              <Icon name="Building2" size={28} className="text-accent" />
-              Информация о клиенте
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Наименование</p>
-              <p className="text-lg font-semibold text-foreground">{clientData.name}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">ИНН</p>
-              <p className="text-lg font-semibold text-foreground">{clientData.inn}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="text-lg font-semibold text-foreground">{clientData.email}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Телефон</p>
-              <p className="text-lg font-semibold text-foreground">{clientData.phone}</p>
+          <CardContent className="py-3">
+            <div className="flex items-center gap-6">
+              <Icon name="Building2" size={20} className="text-accent flex-shrink-0" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-1 flex-1 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Клиент:</span>{' '}
+                  <span className="font-semibold text-foreground">{clientData.name}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">ИНН:</span>{' '}
+                  <span className="font-semibold text-foreground">{clientData.inn}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Email:</span>{' '}
+                  <span className="font-semibold text-foreground">{clientData.email}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Телефон:</span>{' '}
+                  <span className="font-semibold text-foreground">{clientData.phone}</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -222,20 +228,65 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 flex items-center gap-4">
-              <Label htmlFor="status-filter" className="text-foreground whitespace-nowrap">Фильтр по статусу:</Label>
-              <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as 'all' | 'активна' | 'заблокирована')}>
-                <SelectTrigger id="status-filter" className="w-[200px] bg-input border-2 border-border text-foreground">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все карты</SelectItem>
-                  <SelectItem value="активна">Активные</SelectItem>
-                  <SelectItem value="заблокирована">Заблокированные</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="ml-auto text-sm text-muted-foreground">
-                Найдено карт: <strong className="text-accent">{filteredCards.length}</strong>
+            <div className="mb-4 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="card-search" className="text-sm text-foreground">Поиск по номеру</Label>
+                  <Input
+                    id="card-search"
+                    placeholder="Введите номер карты"
+                    value={cardSearch}
+                    onChange={(e) => setCardSearch(e.target.value)}
+                    className="bg-input border-2 border-border text-foreground"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="fuel-filter" className="text-sm text-foreground">Вид топлива</Label>
+                  <Select value={fuelTypeFilter} onValueChange={setFuelTypeFilter}>
+                    <SelectTrigger id="fuel-filter" className="bg-input border-2 border-border text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все виды</SelectItem>
+                      {uniqueFuelTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="status-filter" className="text-sm text-foreground">Статус</Label>
+                  <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as 'all' | 'активна' | 'заблокирована')}>
+                    <SelectTrigger id="status-filter" className="bg-input border-2 border-border text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все статусы</SelectItem>
+                      <SelectItem value="активна">Активные</SelectItem>
+                      <SelectItem value="заблокирована">Заблокированные</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div className="text-muted-foreground">
+                  Найдено карт: <strong className="text-accent">{filteredCards.length}</strong> из {cards.length}
+                </div>
+                {(cardSearch || fuelTypeFilter !== 'all' || statusFilter !== 'all') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setCardSearch('');
+                      setFuelTypeFilter('all');
+                      setStatusFilter('all');
+                    }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Icon name="X" size={16} className="mr-1" />
+                    Сбросить фильтры
+                  </Button>
+                )}
               </div>
             </div>
             <Table>
