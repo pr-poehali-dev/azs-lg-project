@@ -378,6 +378,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [filterCard, setFilterCard] = useState<string>('all');
   const [filterStation, setFilterStation] = useState<string>('all');
   const [filterOperationType, setFilterOperationType] = useState<string>('all');
+  const [filterDateFrom, setFilterDateFrom] = useState<string>('');
+  const [filterDateTo, setFilterDateTo] = useState<string>('');
   const [balanceChangeDialog, setBalanceChangeDialog] = useState<{open: boolean, cardCode: string, oldBalance: number, newBalance: number}>({open: false, cardCode: '', oldBalance: 0, newBalance: 0});
 
   const handleDeleteOperation = async (id: number) => {
@@ -440,7 +442,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     if (filterCard !== 'all' && op.card_code !== filterCard) return false;
     if (filterStation !== 'all' && op.station_name !== filterStation) return false;
     if (filterOperationType !== 'all' && op.operation_type !== filterOperationType) return false;
-    return true;
+    const matchesDateFrom = !filterDateFrom || op.operation_date >= filterDateFrom;
+    const matchesDateTo = !filterDateTo || op.operation_date <= filterDateTo + ' 23:59';
+    return matchesDateFrom && matchesDateTo;
   });
 
   const uniqueCardCodes = Array.from(new Set(operations.map(o => o.card_code)));
@@ -899,7 +903,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-5 gap-4 mb-4">
                   <div>
                     <Label className="text-foreground">Карта</Label>
                     <Select value={filterCard} onValueChange={setFilterCard}>
@@ -941,6 +945,24 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div>
+                    <Label className="text-foreground">Дата с</Label>
+                    <Input
+                      type="date"
+                      value={filterDateFrom}
+                      onChange={(e) => setFilterDateFrom(e.target.value)}
+                      className="bg-input border-2 border-border text-foreground"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-foreground">Дата по</Label>
+                    <Input
+                      type="date"
+                      value={filterDateTo}
+                      onChange={(e) => setFilterDateTo(e.target.value)}
+                      className="bg-input border-2 border-border text-foreground"
+                    />
                   </div>
                 </div>
                 <div className="overflow-x-auto">
