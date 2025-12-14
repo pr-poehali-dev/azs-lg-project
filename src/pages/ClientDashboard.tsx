@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
+import { useOperations } from '@/contexts/OperationsContext';
 
 interface ClientData {
   name: string;
@@ -36,6 +37,7 @@ interface ClientDashboardProps {
 
 export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboardProps) {
   const navigate = useNavigate();
+  const { addTransferOperations } = useOperations();
   const [clientData] = useState<ClientData>({
     name: 'ООО "Транспортная компания"',
     inn: '7707083893',
@@ -105,8 +107,20 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     if (selectedCardId !== null && targetCardId !== null && transferAmount) {
       const amount = parseFloat(transferAmount);
       const sourceCard = cards.find(c => c.id === selectedCardId);
+      const targetCard = cards.find(c => c.id === targetCardId);
       
-      if (sourceCard && sourceCard.balance_liters >= amount) {
+      if (sourceCard && targetCard && sourceCard.balance_liters >= amount) {
+        const avgPrice = 52.50;
+        
+        addTransferOperations(
+          selectedCardId,
+          targetCardId,
+          amount,
+          avgPrice,
+          sourceCard.card_code,
+          targetCard.card_code
+        );
+        
         setCards(cards.map(card => {
           if (card.id === selectedCardId) {
             return { ...card, balance_liters: card.balance_liters - amount };

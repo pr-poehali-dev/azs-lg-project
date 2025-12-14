@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
+import { useOperations } from '@/contexts/OperationsContext';
 
 interface ClientData {
   name: string;
@@ -43,6 +44,7 @@ export default function CardOperations() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const cardId = parseInt(searchParams.get('cardId') || '1');
+  const { operations: contextOperations } = useOperations();
 
   const [clientData] = useState<ClientData>({
     name: 'ООО "Транспортная компания"',
@@ -63,30 +65,7 @@ export default function CardOperations() {
     { id: 2, name: 'АЗС СОЮЗ №5', code_1c: '200002', address: 'г. Москва, пр-т Мира, д. 25' }
   ]);
 
-  const [operations] = useState<Operation[]>([
-    {
-      id: 1,
-      card_id: 1,
-      station_name: 'АЗС СОЮЗ №5',
-      operation_date: '2024-12-10 14:30',
-      operation_type: 'пополнение',
-      quantity: 1000.00,
-      price: 52.50,
-      amount: 52500.00,
-      comment: 'Первоначальное пополнение'
-    },
-    {
-      id: 2,
-      card_id: 1,
-      station_name: 'АЗС СОЮЗ №3',
-      operation_date: '2024-12-12 09:15',
-      operation_type: 'заправка',
-      quantity: 45.00,
-      price: 52.50,
-      amount: 2362.50,
-      comment: 'Заправка автомобиля А123БВ'
-    }
-  ]);
+  const operations = contextOperations;
 
   const [selectedCard] = useState<number>(cardId);
   const [selectedStation, setSelectedStation] = useState<string>('all');
