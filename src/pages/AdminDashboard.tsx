@@ -969,39 +969,39 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b-2 border-border">
-                        <TableHead className="text-foreground font-bold">Карта</TableHead>
-                        <TableHead className="text-foreground font-bold">АЗС</TableHead>
-                        <TableHead className="text-foreground font-bold">Дата</TableHead>
-                        <TableHead className="text-foreground font-bold">Операция</TableHead>
-                        <TableHead className="text-foreground font-bold">Литры</TableHead>
-                        <TableHead className="text-foreground font-bold">Цена</TableHead>
-                        <TableHead className="text-foreground font-bold">Сумма</TableHead>
-                        <TableHead className="text-foreground font-bold">Комментарий</TableHead>
-                        <TableHead className="text-foreground font-bold">Действия</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">Карта</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">АЗС</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">Дата</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">Операция</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">Литры</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">Цена</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">Сумма</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">Комментарий</TableHead>
+                        <TableHead className="text-foreground font-bold py-1">Действия</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredOperations.map((op) => (
                         <TableRow key={op.id} className="border-b border-border">
-                          <TableCell className="font-mono text-accent">{op.card_code}</TableCell>
-                          <TableCell className="text-foreground">{op.station_name}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{op.operation_date}</TableCell>
-                          <TableCell>
+                          <TableCell className="font-mono text-accent py-1">{op.card_code}</TableCell>
+                          <TableCell className="text-foreground py-1">{op.station_name}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm py-1">{op.operation_date}</TableCell>
+                          <TableCell className="py-1">
                             <Badge className={getOperationColor(op.operation_type)}>
                               {op.operation_type}
                             </Badge>
                           </TableCell>
-                          <TableCell className="font-semibold text-foreground">{op.quantity.toFixed(3)}</TableCell>
-                          <TableCell className="text-foreground">{op.price.toFixed(2)}</TableCell>
-                          <TableCell className="font-bold text-accent">{op.amount.toFixed(2)} ₽</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{op.comment}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline" onClick={() => handleEditOperation(op)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
-                                <Icon name="Pencil" className="w-4 h-4" />
+                          <TableCell className="font-semibold text-foreground py-1">{op.quantity.toFixed(3)}</TableCell>
+                          <TableCell className="text-foreground py-1">{op.price.toFixed(2)}</TableCell>
+                          <TableCell className="font-bold text-accent py-1">{op.amount.toFixed(2)} ₽</TableCell>
+                          <TableCell className="text-muted-foreground text-sm py-1">{op.comment}</TableCell>
+                          <TableCell className="py-1">
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" onClick={() => handleEditOperation(op)} className="h-7 w-7 p-0 border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                                <Icon name="Pencil" className="w-3 h-3" />
                               </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleDeleteOperation(op.id)}>
-                                <Icon name="Trash2" className="w-4 h-4" />
+                              <Button size="sm" variant="destructive" onClick={() => handleDeleteOperation(op.id)} className="h-7 w-7 p-0">
+                                <Icon name="Trash2" className="w-3 h-3" />
                               </Button>
                             </div>
                           </TableCell>
