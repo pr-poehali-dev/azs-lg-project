@@ -29,6 +29,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const [editingClient, setEditingClient] = useState<any>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
+  const [newClient, setNewClient] = useState({inn: '', name: '', address: '', phone: '', email: '', login: '', password: ''});
 
   const handleDeleteClient = (id: number) => {
     if (confirm('Удалить клиента?')) {
@@ -49,6 +51,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
+  const handleCreateClient = () => {
+    const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1;
+    setClients([...clients, { id: newId, ...newClient }]);
+    setNewClient({inn: '', name: '', address: '', phone: '', email: '', login: '', password: ''});
+    setIsAddClientDialogOpen(false);
+  };
+
   const [fuelTypes, setFuelTypes] = useState([
     { id: 1, name: 'АИ-92', code_1c: '100001' },
     { id: 2, name: 'АИ-95', code_1c: '100002' },
@@ -58,6 +67,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const [editingFuelType, setEditingFuelType] = useState<any>(null);
   const [isFuelTypeDialogOpen, setIsFuelTypeDialogOpen] = useState(false);
+  const [isAddFuelTypeDialogOpen, setIsAddFuelTypeDialogOpen] = useState(false);
+  const [newFuelType, setNewFuelType] = useState({name: '', code_1c: ''});
 
   const handleDeleteFuelType = (id: number) => {
     if (confirm('Удалить вид топлива?')) {
@@ -78,6 +89,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
+  const handleCreateFuelType = () => {
+    const newId = fuelTypes.length > 0 ? Math.max(...fuelTypes.map(f => f.id)) + 1 : 1;
+    setFuelTypes([...fuelTypes, { id: newId, ...newFuelType }]);
+    setNewFuelType({name: '', code_1c: ''});
+    setIsAddFuelTypeDialogOpen(false);
+  };
+
   const [cards, setCards] = useState([
     {
       id: 1,
@@ -91,6 +109,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const [editingCard, setEditingCard] = useState<any>(null);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
+  const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
+  const [newCard, setNewCard] = useState({card_code: '', client_name: '', fuel_type: '', balance_liters: 0, pin_code: ''});
 
   const handleDeleteCard = (id: number) => {
     if (confirm('Удалить карту?')) {
@@ -109,6 +129,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setIsCardDialogOpen(false);
       setEditingCard(null);
     }
+  };
+
+  const handleCreateCard = () => {
+    const newId = cards.length > 0 ? Math.max(...cards.map(c => c.id)) + 1 : 1;
+    setCards([...cards, { id: newId, ...newCard }]);
+    setNewCard({card_code: '', client_name: '', fuel_type: '', balance_liters: 0, pin_code: ''});
+    setIsAddCardDialogOpen(false);
   };
 
   const [operations, setOperations] = useState([
@@ -138,6 +165,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const [editingOperation, setEditingOperation] = useState<any>(null);
   const [isOperationDialogOpen, setIsOperationDialogOpen] = useState(false);
+  const [isAddOperationDialogOpen, setIsAddOperationDialogOpen] = useState(false);
+  const [newOperation, setNewOperation] = useState({card_code: '', station_name: '', operation_date: '', operation_type: 'пополнение', quantity: 0, price: 0, amount: 0, comment: ''});
   const [filterCard, setFilterCard] = useState<string>('all');
   const [filterStation, setFilterStation] = useState<string>('all');
   const [filterOperationType, setFilterOperationType] = useState<string>('all');
@@ -194,6 +223,34 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setIsOperationDialogOpen(false);
       setEditingOperation(null);
     }
+  };
+
+  const handleCreateOperation = () => {
+    const newId = operations.length > 0 ? Math.max(...operations.map(o => o.id)) + 1 : 1;
+    const updatedOperations = [...operations, { id: newId, ...newOperation }];
+    setOperations(updatedOperations);
+    
+    const cardCode = newOperation.card_code;
+    const card = cards.find(c => c.card_code === cardCode);
+    
+    if (card) {
+      const oldBalance = card.balance_liters;
+      const newBalance = calculateCardBalance(cardCode, updatedOperations);
+      
+      setCards(cards.map(c => 
+        c.card_code === cardCode ? {...c, balance_liters: newBalance} : c
+      ));
+      
+      setBalanceChangeDialog({
+        open: true,
+        cardCode,
+        oldBalance,
+        newBalance
+      });
+    }
+    
+    setNewOperation({card_code: '', station_name: '', operation_date: '', operation_type: 'пополнение', quantity: 0, price: 0, amount: 0, comment: ''});
+    setIsAddOperationDialogOpen(false);
   };
 
   const filteredOperations = operations.filter(op => {
@@ -268,7 +325,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Icon name="Users" size={28} className="text-accent" />
                   Клиенты
                 </CardTitle>
-                <Dialog>
+                <Dialog open={isAddClientDialogOpen} onOpenChange={setIsAddClientDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
                       <Icon name="Plus" size={20} className="mr-2" />
@@ -282,33 +339,33 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="inn" className="text-foreground">ИНН</Label>
-                        <Input id="inn" placeholder="7707083893" className="bg-input text-foreground" />
+                        <Input id="inn" placeholder="7707083893" className="bg-input text-foreground" value={newClient.inn} onChange={(e) => setNewClient({...newClient, inn: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="name" className="text-foreground">Наименование</Label>
-                        <Input id="name" placeholder="ООО Компания" className="bg-input text-foreground" />
+                        <Input id="name" placeholder="ООО Компания" className="bg-input text-foreground" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="address" className="text-foreground">Адрес</Label>
-                        <Input id="address" placeholder="г. Москва, ул. Ленина, д. 1" className="bg-input text-foreground" />
+                        <Input id="address" placeholder="г. Москва, ул. Ленина, д. 1" className="bg-input text-foreground" value={newClient.address} onChange={(e) => setNewClient({...newClient, address: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="phone" className="text-foreground">Телефон</Label>
-                        <Input id="phone" placeholder="+79991234567" className="bg-input text-foreground" />
+                        <Input id="phone" placeholder="+79991234567" className="bg-input text-foreground" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="email" className="text-foreground">Email</Label>
-                        <Input id="email" type="email" placeholder="info@company.ru" className="bg-input text-foreground" />
+                        <Input id="email" type="email" placeholder="info@company.ru" className="bg-input text-foreground" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="login" className="text-foreground">Логин</Label>
-                        <Input id="login" placeholder="company" className="bg-input text-foreground" />
+                        <Input id="login" placeholder="company" className="bg-input text-foreground" value={newClient.login} onChange={(e) => setNewClient({...newClient, login: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="password" className="text-foreground">Пароль</Label>
-                        <Input id="password" type="password" placeholder="••••••••" className="bg-input text-foreground" />
+                        <Input id="password" type="password" placeholder="••••••••" className="bg-input text-foreground" value={newClient.password} onChange={(e) => setNewClient({...newClient, password: e.target.value})} />
                       </div>
-                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleCreateClient}>
                         Создать
                       </Button>
                     </div>
@@ -435,7 +492,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Icon name="CreditCard" size={28} className="text-accent" />
                   Топливные карты
                 </CardTitle>
-                <Dialog>
+                <Dialog open={isAddCardDialogOpen} onOpenChange={setIsAddCardDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
                       <Icon name="Plus" size={20} className="mr-2" />
@@ -449,7 +506,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="client" className="text-foreground">Клиент</Label>
-                        <Select>
+                        <Select value={newCard.client_name} onValueChange={(value) => setNewCard({...newCard, client_name: value})}>
                           <SelectTrigger className="bg-input text-foreground">
                             <SelectValue placeholder="Выберите клиента" />
                           </SelectTrigger>
@@ -462,7 +519,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div>
                         <Label htmlFor="fuel" className="text-foreground">Вид топлива</Label>
-                        <Select>
+                        <Select value={newCard.fuel_type} onValueChange={(value) => setNewCard({...newCard, fuel_type: value})}>
                           <SelectTrigger className="bg-input text-foreground">
                             <SelectValue placeholder="Выберите топливо" />
                           </SelectTrigger>
@@ -475,17 +532,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div>
                         <Label htmlFor="card-code" className="text-foreground">Код карты</Label>
-                        <Input id="card-code" placeholder="0001" className="bg-input text-foreground" />
+                        <Input id="card-code" placeholder="0001" className="bg-input text-foreground" value={newCard.card_code} onChange={(e) => setNewCard({...newCard, card_code: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="pin" className="text-foreground">PIN-код</Label>
-                        <Input id="pin" type="password" placeholder="1234" className="bg-input text-foreground" />
+                        <Input id="pin" type="password" placeholder="1234" className="bg-input text-foreground" value={newCard.pin_code} onChange={(e) => setNewCard({...newCard, pin_code: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="balance" className="text-foreground">Начальный баланс (литры)</Label>
-                        <Input id="balance" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" />
+                        <Input id="balance" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" value={newCard.balance_liters} onChange={(e) => setNewCard({...newCard, balance_liters: parseFloat(e.target.value) || 0})} />
                       </div>
-                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleCreateCard}>
                         Создать
                       </Button>
                     </div>
@@ -612,7 +669,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Icon name="History" size={28} className="text-accent" />
                   Операции
                 </CardTitle>
-                <Dialog>
+                <Dialog open={isAddOperationDialogOpen} onOpenChange={setIsAddOperationDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
                       <Icon name="Plus" size={20} className="mr-2" />
@@ -626,7 +683,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="op-card" className="text-foreground">Карта</Label>
-                        <Select>
+                        <Select value={newOperation.card_code} onValueChange={(value) => setNewOperation({...newOperation, card_code: value})}>
                           <SelectTrigger className="bg-input text-foreground">
                             <SelectValue placeholder="Выберите карту" />
                           </SelectTrigger>
@@ -639,7 +696,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div>
                         <Label htmlFor="op-type" className="text-foreground">Тип операции</Label>
-                        <Select>
+                        <Select value={newOperation.operation_type} onValueChange={(value) => setNewOperation({...newOperation, operation_type: value})}>
                           <SelectTrigger className="bg-input text-foreground">
                             <SelectValue placeholder="Выберите тип" />
                           </SelectTrigger>
@@ -652,22 +709,36 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </Select>
                       </div>
                       <div>
+                        <Label htmlFor="op-date" className="text-foreground">Дата и время</Label>
+                        <Input id="op-date" type="datetime-local" className="bg-input text-foreground" value={newOperation.operation_date} onChange={(e) => setNewOperation({...newOperation, operation_date: e.target.value})} />
+                      </div>
+                      <div>
                         <Label htmlFor="op-station" className="text-foreground">АЗС</Label>
-                        <Input id="op-station" placeholder="АЗС СОЮЗ №1" className="bg-input text-foreground" />
+                        <Input id="op-station" placeholder="АЗС СОЮЗ №1" className="bg-input text-foreground" value={newOperation.station_name} onChange={(e) => setNewOperation({...newOperation, station_name: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="op-quantity" className="text-foreground">Количество (литры)</Label>
-                        <Input id="op-quantity" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" />
+                        <Input id="op-quantity" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" value={newOperation.quantity} onChange={(e) => {
+                          const quantity = parseFloat(e.target.value) || 0;
+                          setNewOperation({...newOperation, quantity, amount: quantity * newOperation.price});
+                        }} />
                       </div>
                       <div>
                         <Label htmlFor="op-price" className="text-foreground">Цена за литр</Label>
-                        <Input id="op-price" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" />
+                        <Input id="op-price" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" value={newOperation.price} onChange={(e) => {
+                          const price = parseFloat(e.target.value) || 0;
+                          setNewOperation({...newOperation, price, amount: newOperation.quantity * price});
+                        }} />
+                      </div>
+                      <div>
+                        <Label htmlFor="op-amount" className="text-foreground">Сумма</Label>
+                        <Input id="op-amount" type="number" step="0.01" placeholder="0.00" className="bg-input text-foreground" value={newOperation.amount} readOnly />
                       </div>
                       <div>
                         <Label htmlFor="op-comment" className="text-foreground">Комментарий</Label>
-                        <Input id="op-comment" placeholder="Комментарий" className="bg-input text-foreground" />
+                        <Input id="op-comment" placeholder="Комментарий" className="bg-input text-foreground" value={newOperation.comment} onChange={(e) => setNewOperation({...newOperation, comment: e.target.value})} />
                       </div>
-                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleCreateOperation}>
                         Создать
                       </Button>
                     </div>
@@ -865,7 +936,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <Icon name="Droplet" size={28} className="text-accent" />
                   Виды топлива
                 </CardTitle>
-                <Dialog>
+                <Dialog open={isAddFuelTypeDialogOpen} onOpenChange={setIsAddFuelTypeDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
                       <Icon name="Plus" size={20} className="mr-2" />
@@ -879,13 +950,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="fuel-name" className="text-foreground">Наименование</Label>
-                        <Input id="fuel-name" placeholder="АИ-92" className="bg-input text-foreground" />
+                        <Input id="fuel-name" placeholder="АИ-92" className="bg-input text-foreground" value={newFuelType.name} onChange={(e) => setNewFuelType({...newFuelType, name: e.target.value})} />
                       </div>
                       <div>
                         <Label htmlFor="fuel-code" className="text-foreground">Код 1С</Label>
-                        <Input id="fuel-code" placeholder="100001" className="bg-input text-foreground" />
+                        <Input id="fuel-code" placeholder="100001" className="bg-input text-foreground" value={newFuelType.code_1c} onChange={(e) => setNewFuelType({...newFuelType, code_1c: e.target.value})} />
                       </div>
-                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleCreateFuelType}>
                         Создать
                       </Button>
                     </div>
