@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Get card status - success",
+      "method": "GET",
+      "path": "/?card_code=0001",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "card_code": "string",
+        "fuel_type": "string",
+        "balance_liters": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get card status - missing card_code",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get card status - card not found",
+      "method": "GET",
+      "path": "/?card_code=9999",
+      "expectedStatus": 404,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
