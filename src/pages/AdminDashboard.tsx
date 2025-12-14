@@ -227,7 +227,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     return true;
   });
 
-  const uniqueClientNames = Array.from(new Set(cards.map(c => c.client_name)));
+  const nonAdminClientNames = clients.filter(c => !c.admin).map(c => c.name);
+  const uniqueClientNames = Array.from(new Set(cards.map(c => c.client_name).filter(name => nonAdminClientNames.includes(name))));
   const uniqueCardFuelTypes = Array.from(new Set(cards.map(c => c.fuel_type)));
 
   const [operations, setOperations] = useState([
@@ -585,7 +586,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                                 <SelectValue placeholder="Выберите клиента" />
                               </SelectTrigger>
                               <SelectContent>
-                                {clients.map((client) => (
+                                {clients.filter(client => !client.admin).map((client) => (
                                   <SelectItem key={client.id} value={client.id.toString()}>
                                     {client.name}
                                   </SelectItem>
