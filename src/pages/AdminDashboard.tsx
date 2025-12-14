@@ -181,13 +181,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     window.print();
   };
 
-  const [fuelTypes, setFuelTypes] = useState([
-    { id: 1, name: 'АИ-92', code_1c: '100001' },
-    { id: 2, name: 'АИ-95', code_1c: '100002' },
-    { id: 3, name: 'АИ-98', code_1c: '100003' },
-    { id: 4, name: 'ДТ', code_1c: '100004' }
-  ]);
-
   const [editingFuelType, setEditingFuelType] = useState<any>(null);
   const [isFuelTypeDialogOpen, setIsFuelTypeDialogOpen] = useState(false);
   const [isAddFuelTypeDialogOpen, setIsAddFuelTypeDialogOpen] = useState(false);
