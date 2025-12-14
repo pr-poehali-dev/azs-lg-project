@@ -9,9 +9,18 @@ const API_URLS = {
 export const adminApi = {
   clients: {
     getAll: async () => {
-      const response = await fetch(API_URLS.clients);
-      const data = await response.json();
-      return data.clients || [];
+      try {
+        const response = await fetch(API_URLS.clients);
+        if (!response.ok) {
+          console.error('Fetch error:', response.status, response.statusText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data.clients || [];
+      } catch (error) {
+        console.error('Fetch error:', error instanceof Error ? error.message : 'Unknown error', 'for', API_URLS.clients);
+        throw error;
+      }
     },
     create: async (client: any) => {
       await fetch(API_URLS.clients, {

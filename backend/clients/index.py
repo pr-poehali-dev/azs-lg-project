@@ -12,15 +12,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     method: str = event.get('httpMethod', 'GET')
     
+    cors_headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Accept',
+        'Access-Control-Max-Age': '86400'
+    }
+    
     if method == 'OPTIONS':
         return {
             'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Max-Age': '86400'
-            },
+            'headers': cors_headers,
             'body': '',
             'isBase64Encoded': False
         }
@@ -32,7 +34,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'statusCode': 500,
                 'headers': {
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    **cors_headers
                 },
                 'body': json.dumps({'error': 'Database configuration error'}),
                 'isBase64Encoded': False
@@ -68,7 +70,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'statusCode': 200,
                 'headers': {
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    **cors_headers
                 },
                 'body': json.dumps({'clients': clients}),
                 'isBase64Encoded': False
@@ -113,7 +115,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'statusCode': 201,
                 'headers': {
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    **cors_headers
                 },
                 'body': json.dumps({'client': client}),
                 'isBase64Encoded': False
@@ -160,7 +162,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'statusCode': 200,
                     'headers': {
                         'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
+                        **cors_headers
                     },
                     'body': json.dumps({'client': client}),
                     'isBase64Encoded': False
@@ -173,7 +175,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'statusCode': 404,
                     'headers': {
                         'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
+                        **cors_headers
                     },
                     'body': json.dumps({'error': 'Client not found'}),
                     'isBase64Encoded': False
@@ -188,7 +190,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'statusCode': 400,
                     'headers': {
                         'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
+                        **cors_headers
                     },
                     'body': json.dumps({'error': 'Client ID is required'}),
                     'isBase64Encoded': False
@@ -204,7 +206,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'statusCode': 200,
                 'headers': {
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    **cors_headers
                 },
                 'body': json.dumps({'success': True}),
                 'isBase64Encoded': False
@@ -215,7 +217,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'statusCode': 405,
                 'headers': {
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    **cors_headers
                 },
                 'body': json.dumps({'error': 'Method not allowed'}),
                 'isBase64Encoded': False
@@ -229,7 +231,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 500,
             'headers': {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
+                **cors_headers
             },
             'body': json.dumps({'error': f'Server error: {str(e)}'}),
             'isBase64Encoded': False
