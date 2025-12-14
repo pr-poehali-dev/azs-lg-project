@@ -15,7 +15,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const [clients] = useState([
+  const [clients, setClients] = useState([
     {
       id: 1,
       inn: '7707083893',
@@ -27,14 +27,42 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   ]);
 
-  const [fuelTypes] = useState([
+  const [editingClient, setEditingClient] = useState<any>(null);
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+
+  const handleDeleteClient = (id: number) => {
+    if (confirm('Удалить клиента?')) {
+      setClients(clients.filter(c => c.id !== id));
+    }
+  };
+
+  const handleEditClient = (client: any) => {
+    setEditingClient(client);
+    setIsClientDialogOpen(true);
+  };
+
+  const [fuelTypes, setFuelTypes] = useState([
     { id: 1, name: 'АИ-92', code_1c: '100001' },
     { id: 2, name: 'АИ-95', code_1c: '100002' },
     { id: 3, name: 'АИ-98', code_1c: '100003' },
     { id: 4, name: 'ДТ', code_1c: '100004' }
   ]);
 
-  const [cards] = useState([
+  const [editingFuelType, setEditingFuelType] = useState<any>(null);
+  const [isFuelTypeDialogOpen, setIsFuelTypeDialogOpen] = useState(false);
+
+  const handleDeleteFuelType = (id: number) => {
+    if (confirm('Удалить вид топлива?')) {
+      setFuelTypes(fuelTypes.filter(f => f.id !== id));
+    }
+  };
+
+  const handleEditFuelType = (fuelType: any) => {
+    setEditingFuelType(fuelType);
+    setIsFuelTypeDialogOpen(true);
+  };
+
+  const [cards, setCards] = useState([
     {
       id: 1,
       client_name: 'ООО "Транспортная компания"',
@@ -45,7 +73,21 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   ]);
 
-  const [operations] = useState([
+  const [editingCard, setEditingCard] = useState<any>(null);
+  const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
+
+  const handleDeleteCard = (id: number) => {
+    if (confirm('Удалить карту?')) {
+      setCards(cards.filter(c => c.id !== id));
+    }
+  };
+
+  const handleEditCard = (card: any) => {
+    setEditingCard(card);
+    setIsCardDialogOpen(true);
+  };
+
+  const [operations, setOperations] = useState([
     {
       id: 1,
       card_code: '0001',
@@ -69,6 +111,34 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       comment: 'Заправка автомобиля А123БВ'
     }
   ]);
+
+  const [editingOperation, setEditingOperation] = useState<any>(null);
+  const [isOperationDialogOpen, setIsOperationDialogOpen] = useState(false);
+  const [filterCard, setFilterCard] = useState<string>('all');
+  const [filterStation, setFilterStation] = useState<string>('all');
+  const [filterOperationType, setFilterOperationType] = useState<string>('all');
+
+  const handleDeleteOperation = (id: number) => {
+    if (confirm('Удалить операцию?')) {
+      setOperations(operations.filter(o => o.id !== id));
+    }
+  };
+
+  const handleEditOperation = (operation: any) => {
+    setEditingOperation(operation);
+    setIsOperationDialogOpen(true);
+  };
+
+  const filteredOperations = operations.filter(op => {
+    if (filterCard !== 'all' && op.card_code !== filterCard) return false;
+    if (filterStation !== 'all' && op.station_name !== filterStation) return false;
+    if (filterOperationType !== 'all' && op.operation_type !== filterOperationType) return false;
+    return true;
+  });
+
+  const uniqueCards = Array.from(new Set(operations.map(op => op.card_code)));
+  const uniqueStations = Array.from(new Set(operations.map(op => op.station_name)));
+  const uniqueOperationTypes = Array.from(new Set(operations.map(op => op.operation_type)));
 
   const getOperationColor = (type: string) => {
     switch (type) {
@@ -153,7 +223,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div>
                         <Label htmlFor="address" className="text-foreground">Адрес</Label>
-                        <Input id="address" placeholder="г. Москва..." className="bg-input text-foreground" />
+                        <Input id="address" placeholder="г. Москва, ул. Ленина, д. 1" className="bg-input text-foreground" />
                       </div>
                       <div>
                         <Label htmlFor="phone" className="text-foreground">Телефон</Label>
@@ -165,7 +235,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div>
                         <Label htmlFor="login" className="text-foreground">Логин</Label>
-                        <Input id="login" placeholder="client1" className="bg-input text-foreground" />
+                        <Input id="login" placeholder="company" className="bg-input text-foreground" />
                       </div>
                       <div>
                         <Label htmlFor="password" className="text-foreground">Пароль</Label>
@@ -189,17 +259,28 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableHead className="text-foreground font-bold">Телефон</TableHead>
                         <TableHead className="text-foreground font-bold">Email</TableHead>
                         <TableHead className="text-foreground font-bold">Логин</TableHead>
+                        <TableHead className="text-foreground font-bold">Действия</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {clients.map((client) => (
                         <TableRow key={client.id} className="border-b border-border">
-                          <TableCell className="font-mono text-accent">{client.inn}</TableCell>
-                          <TableCell className="text-foreground font-semibold">{client.name}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{client.address}</TableCell>
-                          <TableCell className="text-foreground">{client.phone}</TableCell>
-                          <TableCell className="text-foreground">{client.email}</TableCell>
-                          <TableCell className="font-mono text-accent">{client.login}</TableCell>
+                          <TableCell className="py-2 px-3 font-mono text-accent">{client.inn}</TableCell>
+                          <TableCell className="py-2 px-3 text-foreground font-semibold">{client.name}</TableCell>
+                          <TableCell className="py-2 px-3 text-muted-foreground text-sm">{client.address}</TableCell>
+                          <TableCell className="py-2 px-3 text-foreground">{client.phone}</TableCell>
+                          <TableCell className="py-2 px-3 text-foreground">{client.email}</TableCell>
+                          <TableCell className="py-2 px-3 font-mono text-accent">{client.login}</TableCell>
+                          <TableCell className="py-2 px-3">
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => handleEditClient(client)} className="h-8 w-8 p-0">
+                                <Icon name="Pencil" size={16} />
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleDeleteClient(client.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                                <Icon name="Trash2" size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -274,28 +355,47 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </Dialog>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b-2 border-border">
-                      <TableHead className="text-foreground font-bold">Номер карты</TableHead>
-                      <TableHead className="text-foreground font-bold">Клиент</TableHead>
-                      <TableHead className="text-foreground font-bold">Топливо</TableHead>
-                      <TableHead className="text-foreground font-bold text-right">Баланс (л)</TableHead>
-                      <TableHead className="text-foreground font-bold">Пин-код</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cards.map((card) => (
-                      <TableRow key={card.id} className="border-b border-border">
-                        <TableCell className="font-mono text-lg text-accent font-bold">{card.card_code}</TableCell>
-                        <TableCell className="text-foreground">{card.client_name}</TableCell>
-                        <TableCell className="text-foreground">{card.fuel_type}</TableCell>
-                        <TableCell className="text-right font-bold text-lg text-accent">{card.balance_liters.toFixed(2)}</TableCell>
-                        <TableCell className="font-mono text-muted-foreground">{card.pin_code}</TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-b-2 border-border">
+                        <TableHead className="text-foreground font-bold">Номер карты</TableHead>
+                        <TableHead className="text-foreground font-bold">Клиент</TableHead>
+                        <TableHead className="text-foreground font-bold">Вид топлива</TableHead>
+                        <TableHead className="text-foreground font-bold text-right">Баланс (л)</TableHead>
+                        <TableHead className="text-foreground font-bold">Пин-код</TableHead>
+                        <TableHead className="text-foreground font-bold">Действия</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {cards.map((card) => (
+                        <TableRow key={card.id} className="border-b border-border">
+                          <TableCell className="py-2 px-3 font-mono text-2xl font-bold text-accent">{card.card_code}</TableCell>
+                          <TableCell className="py-2 px-3 text-foreground font-semibold">{card.client_name}</TableCell>
+                          <TableCell className="py-2 px-3">
+                            <Badge variant="outline" className="border-accent text-accent">
+                              {card.fuel_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-2 px-3 text-right font-mono text-lg font-semibold text-foreground">
+                            {card.balance_liters.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="py-2 px-3 font-mono text-muted-foreground">{card.pin_code}</TableCell>
+                          <TableCell className="py-2 px-3">
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => handleEditCard(card)} className="h-8 w-8 p-0">
+                                <Icon name="Pencil" size={16} />
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleDeleteCard(card.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                                <Icon name="Trash2" size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -305,7 +405,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-2xl text-foreground flex items-center gap-2">
                   <Icon name="History" size={28} className="text-accent" />
-                  Операции по картам
+                  Операции
                 </CardTitle>
                 <Dialog>
                   <DialogTrigger asChild>
@@ -327,7 +427,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           </SelectTrigger>
                           <SelectContent className="bg-card border-2 border-accent">
                             {cards.map(c => (
-                              <SelectItem key={c.id} value={c.id.toString()} className="text-foreground">{c.card_code} - {c.client_name}</SelectItem>
+                              <SelectItem key={c.id} value={c.card_code} className="text-foreground">{c.card_code} - {c.client_name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -355,12 +455,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <Input id="quantity" type="number" placeholder="0.00" className="bg-input text-foreground" />
                       </div>
                       <div>
-                        <Label htmlFor="price" className="text-foreground">Цена за литр</Label>
+                        <Label htmlFor="price" className="text-foreground">Цена за литр (₽)</Label>
                         <Input id="price" type="number" placeholder="0.00" className="bg-input text-foreground" />
                       </div>
                       <div>
-                        <Label htmlFor="op-comment" className="text-foreground">Комментарий</Label>
-                        <Input id="op-comment" placeholder="Дополнительная информация" className="bg-input text-foreground" />
+                        <Label htmlFor="comment" className="text-foreground">Комментарий</Label>
+                        <Input id="comment" placeholder="Описание операции" className="bg-input text-foreground" />
                       </div>
                       <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                         Создать
@@ -370,35 +470,90 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </Dialog>
               </CardHeader>
               <CardContent>
+                <div className="mb-4 flex gap-4">
+                  <div className="flex-1">
+                    <Label className="text-foreground mb-2 block">Фильтр по карте</Label>
+                    <Select value={filterCard} onValueChange={setFilterCard}>
+                      <SelectTrigger className="bg-input text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-2 border-accent">
+                        <SelectItem value="all" className="text-foreground">Все</SelectItem>
+                        {uniqueCards.map(card => (
+                          <SelectItem key={card} value={card} className="text-foreground">{card}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-foreground mb-2 block">Фильтр по АЗС</Label>
+                    <Select value={filterStation} onValueChange={setFilterStation}>
+                      <SelectTrigger className="bg-input text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-2 border-accent">
+                        <SelectItem value="all" className="text-foreground">Все</SelectItem>
+                        {uniqueStations.map(station => (
+                          <SelectItem key={station} value={station} className="text-foreground">{station}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-foreground mb-2 block">Фильтр по типу</Label>
+                    <Select value={filterOperationType} onValueChange={setFilterOperationType}>
+                      <SelectTrigger className="bg-input text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-2 border-accent">
+                        <SelectItem value="all" className="text-foreground">Все</SelectItem>
+                        {uniqueOperationTypes.map(type => (
+                          <SelectItem key={type} value={type} className="text-foreground">{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b-2 border-border">
+                        <TableHead className="text-foreground font-bold">Дата/Время</TableHead>
                         <TableHead className="text-foreground font-bold">Карта</TableHead>
                         <TableHead className="text-foreground font-bold">АЗС</TableHead>
-                        <TableHead className="text-foreground font-bold">Дата</TableHead>
-                        <TableHead className="text-foreground font-bold">Операция</TableHead>
-                        <TableHead className="text-foreground font-bold text-right">Литры</TableHead>
-                        <TableHead className="text-foreground font-bold text-right">Цена</TableHead>
-                        <TableHead className="text-foreground font-bold text-right">Сумма</TableHead>
+                        <TableHead className="text-foreground font-bold">Тип</TableHead>
+                        <TableHead className="text-foreground font-bold text-right">Количество (л)</TableHead>
+                        <TableHead className="text-foreground font-bold text-right">Цена (₽)</TableHead>
+                        <TableHead className="text-foreground font-bold text-right">Сумма (₽)</TableHead>
                         <TableHead className="text-foreground font-bold">Комментарий</TableHead>
+                        <TableHead className="text-foreground font-bold">Действия</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {operations.map((op) => (
-                        <TableRow key={op.id} className="border-b border-border">
-                          <TableCell className="font-mono text-accent">{op.card_code}</TableCell>
-                          <TableCell className="text-foreground">{op.station_name}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{op.operation_date}</TableCell>
-                          <TableCell>
-                            <Badge className={getOperationColor(op.operation_type)}>
-                              {op.operation_type}
+                      {filteredOperations.map((operation) => (
+                        <TableRow key={operation.id} className="border-b border-border">
+                          <TableCell className="py-2 px-3 font-mono text-sm text-muted-foreground">{operation.operation_date}</TableCell>
+                          <TableCell className="py-2 px-3 font-mono text-xl font-bold text-accent">{operation.card_code}</TableCell>
+                          <TableCell className="py-2 px-3 text-foreground">{operation.station_name}</TableCell>
+                          <TableCell className="py-2 px-3">
+                            <Badge className={getOperationColor(operation.operation_type)}>
+                              {operation.operation_type}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-semibold text-foreground">{op.quantity.toFixed(2)}</TableCell>
-                          <TableCell className="text-right text-foreground">{op.price.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-bold text-accent">{op.amount.toFixed(2)} ₽</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{op.comment}</TableCell>
+                          <TableCell className="py-2 px-3 text-right font-mono text-foreground">{operation.quantity.toFixed(2)}</TableCell>
+                          <TableCell className="py-2 px-3 text-right font-mono text-foreground">{operation.price.toFixed(2)}</TableCell>
+                          <TableCell className="py-2 px-3 text-right font-mono font-semibold text-foreground">{operation.amount.toFixed(2)}</TableCell>
+                          <TableCell className="py-2 px-3 text-sm text-muted-foreground">{operation.comment}</TableCell>
+                          <TableCell className="py-2 px-3">
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => handleEditOperation(operation)} className="h-8 w-8 p-0">
+                                <Icon name="Pencil" size={16} />
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleDeleteOperation(operation.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                                <Icon name="Trash2" size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -428,12 +583,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="fuel-name" className="text-foreground">Название</Label>
-                        <Input id="fuel-name" placeholder="АИ-95" className="bg-input text-foreground" />
+                        <Label htmlFor="fuel-name" className="text-foreground">Наименование</Label>
+                        <Input id="fuel-name" placeholder="АИ-92" className="bg-input text-foreground" />
                       </div>
                       <div>
-                        <Label htmlFor="code" className="text-foreground">Код 1С (6 цифр)</Label>
-                        <Input id="code" placeholder="100001" maxLength={6} className="bg-input text-foreground" />
+                        <Label htmlFor="code-1c" className="text-foreground">Код 1С</Label>
+                        <Input id="code-1c" placeholder="100001" className="bg-input text-foreground" />
                       </div>
                       <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                         Создать
@@ -443,22 +598,35 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </Dialog>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b-2 border-border">
-                      <TableHead className="text-foreground font-bold">Название</TableHead>
-                      <TableHead className="text-foreground font-bold">Код 1С</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {fuelTypes.map((fuel) => (
-                      <TableRow key={fuel.id} className="border-b border-border">
-                        <TableCell className="text-lg font-semibold text-foreground">{fuel.name}</TableCell>
-                        <TableCell className="font-mono text-accent">{fuel.code_1c}</TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-b-2 border-border">
+                        <TableHead className="text-foreground font-bold">Наименование</TableHead>
+                        <TableHead className="text-foreground font-bold">Код 1С</TableHead>
+                        <TableHead className="text-foreground font-bold">Действия</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {fuelTypes.map((fuel) => (
+                        <TableRow key={fuel.id} className="border-b border-border">
+                          <TableCell className="py-2 px-3 text-foreground font-semibold text-lg">{fuel.name}</TableCell>
+                          <TableCell className="py-2 px-3 font-mono text-accent">{fuel.code_1c}</TableCell>
+                          <TableCell className="py-2 px-3">
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => handleEditFuelType(fuel)} className="h-8 w-8 p-0">
+                                <Icon name="Pencil" size={16} />
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleDeleteFuelType(fuel.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                                <Icon name="Trash2" size={16} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
