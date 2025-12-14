@@ -689,8 +689,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-card" className="text-right text-foreground">Код карты</Label>
-                            <Input id="new-op-card" value={newOperation.card_code} onChange={(e) => setNewOperation({...newOperation, card_code: e.target.value})} className="col-span-3" />
+                            <Label htmlFor="new-op-card" className="text-right text-foreground">Карта</Label>
+                            <Select value={newOperation.card_code} onValueChange={(value) => setNewOperation({...newOperation, card_code: value})}>
+                              <SelectTrigger id="new-op-card" className="col-span-3">
+                                <SelectValue placeholder="Выберите карту" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {cards.map((card) => (
+                                  <SelectItem key={card.id} value={card.card_code}>
+                                    {card.card_code} - {card.client_name} ({card.fuel_type})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-op-station" className="text-right text-foreground">АЗС</Label>
