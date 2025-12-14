@@ -141,6 +141,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [filterCard, setFilterCard] = useState<string>('all');
   const [filterStation, setFilterStation] = useState<string>('all');
   const [filterOperationType, setFilterOperationType] = useState<string>('all');
+  const [balanceChangeDialog, setBalanceChangeDialog] = useState<{open: boolean, cardCode: string, oldBalance: number, newBalance: number}>({open: false, cardCode: '', oldBalance: 0, newBalance: 0});
 
   const handleDeleteOperation = (id: number) => {
     if (confirm('Удалить операцию?')) {
@@ -153,9 +154,43 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsOperationDialogOpen(true);
   };
 
+  const calculateCardBalance = (cardCode: string, updatedOperations: any[]) => {
+    return updatedOperations
+      .filter(op => op.card_code === cardCode)
+      .reduce((balance, op) => {
+        if (op.operation_type === 'пополнение' || op.operation_type === 'оприходование') {
+          return balance + op.quantity;
+        } else if (op.operation_type === 'заправка' || op.operation_type === 'списание') {
+          return balance - op.quantity;
+        }
+        return balance;
+      }, 0);
+  };
+
   const handleSaveOperation = () => {
     if (editingOperation) {
-      setOperations(operations.map(o => o.id === editingOperation.id ? editingOperation : o));
+      const updatedOperations = operations.map(o => o.id === editingOperation.id ? editingOperation : o);
+      setOperations(updatedOperations);
+      
+      const cardCode = editingOperation.card_code;
+      const card = cards.find(c => c.card_code === cardCode);
+      
+      if (card) {
+        const oldBalance = card.balance_liters;
+        const newBalance = calculateCardBalance(cardCode, updatedOperations);
+        
+        setCards(cards.map(c => 
+          c.card_code === cardCode ? {...c, balance_liters: newBalance} : c
+        ));
+        
+        setBalanceChangeDialog({
+          open: true,
+          cardCode,
+          oldBalance,
+          newBalance
+        });
+      }
+      
       setIsOperationDialogOpen(false);
       setEditingOperation(null);
     }
@@ -928,6 +963,67 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </TabsContent>
         </Tabs>
       </main>
+
+      <Dialog open={balanceChangeDialog.open} onOpenChange={(open) => setBalanceChangeDialog({...balanceChangeDialog, open})}>
+        <DialogContent className="bg-card border-4 border-accent shadow-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-foreground text-center flex items-center justify-center gap-2">
+              <Icon name="CheckCircle2" size={32} className="text-primary" />
+              Баланс карты изменен
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <Icon name="CreditCard" size={24} className="text-accent" />
+                <p className="text-xl font-mono text-accent">{balanceChangeDialog.cardCode}</p>
+              </div>
+              
+              <div className="flex items-center justify-center gap-4">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-1">Было</p>
+                  <p className="text-2xl font-bold text-muted-foreground line-through">
+                    {balanceChangeDialog.oldBalance.toFixed(2)} л
+                  </p>
+                </div>
+                
+                <Icon name="ArrowRight" size={32} className="text-accent" />
+                
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-1">Стало</p>
+                  <p className="text-3xl font-bold text-primary">
+                    {balanceChangeDialog.newBalance.toFixed(2)} л
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+                  balanceChangeDialog.newBalance > balanceChangeDialog.oldBalance 
+                    ? 'bg-primary/20 text-primary' 
+                    : 'bg-destructive/20 text-destructive'
+                }`}>
+                  <Icon 
+                    name={balanceChangeDialog.newBalance > balanceChangeDialog.oldBalance ? 'TrendingUp' : 'TrendingDown'} 
+                    size={20} 
+                  />
+                  <span className="font-semibold">
+                    {balanceChangeDialog.newBalance > balanceChangeDialog.oldBalance ? '+' : ''}
+                    {(balanceChangeDialog.newBalance - balanceChangeDialog.oldBalance).toFixed(2)} л
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={() => setBalanceChangeDialog({open: false, cardCode: '', oldBalance: 0, newBalance: 0})}
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-12 text-lg"
+            >
+              Понятно
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
