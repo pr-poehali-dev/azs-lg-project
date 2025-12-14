@@ -25,14 +25,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       address: 'г. Москва, ул. Ленина, д. 1',
       phone: '+79991234567',
       email: 'info@transport.ru',
-      login: 'admin'
+      login: 'admin',
+      admin: false
     }
   ]);
 
   const [editingClient, setEditingClient] = useState<any>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
-  const [newClient, setNewClient] = useState({inn: '', name: '', address: '', phone: '', email: '', login: '', password: ''});
+  const [newClient, setNewClient] = useState({inn: '', name: '', address: '', phone: '', email: '', login: '', password: '', admin: false});
 
   const handleDeleteClient = (id: number) => {
     if (confirm('Удалить клиента?')) {
@@ -56,7 +57,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleCreateClient = () => {
     const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1;
     setClients([...clients, { id: newId, ...newClient }]);
-    setNewClient({inn: '', name: '', address: '', phone: '', email: '', login: '', password: ''});
+    setNewClient({inn: '', name: '', address: '', phone: '', email: '', login: '', password: '', admin: false});
     setIsAddClientDialogOpen(false);
   };
 
@@ -470,6 +471,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             <Label htmlFor="new-password" className="text-right text-foreground">Пароль</Label>
                             <Input id="new-password" type="password" value={newClient.password} onChange={(e) => setNewClient({...newClient, password: e.target.value})} className="col-span-3" />
                           </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="new-admin" className="text-right text-foreground">Это админ</Label>
+                            <div className="col-span-3 flex items-center">
+                              <input 
+                                id="new-admin" 
+                                type="checkbox" 
+                                checked={newClient.admin} 
+                                onChange={(e) => setNewClient({...newClient, admin: e.target.checked})} 
+                                className="w-5 h-5 accent-accent cursor-pointer"
+                              />
+                              <span className="ml-3 text-sm text-muted-foreground">Отметьте, если это администратор</span>
+                            </div>
+                          </div>
                         </div>
                         <div className="flex justify-end gap-2">
                           <Button variant="outline" onClick={() => setIsAddClientDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
@@ -490,6 +504,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead className="text-foreground font-bold">Телефон</TableHead>
                       <TableHead className="text-foreground font-bold">Email</TableHead>
                       <TableHead className="text-foreground font-bold">Логин</TableHead>
+                      <TableHead className="text-foreground font-bold">Тип</TableHead>
                       <TableHead className="text-foreground font-bold">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -501,9 +516,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           className="font-medium text-accent cursor-pointer hover:underline transition-all"
                           onClick={() => {
                             sessionStorage.setItem('fromAdmin', 'true');
-                            navigate('/client');
+                            navigate(client.admin ? '/admin' : '/client');
                           }}
-                          title="Перейти в кабинет клиента"
+                          title={client.admin ? "Перейти в админпанель" : "Перейти в кабинет клиента"}
                         >
                           {client.name}
                         </TableCell>
@@ -511,6 +526,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="text-foreground">{client.phone}</TableCell>
                         <TableCell className="text-foreground">{client.email}</TableCell>
                         <TableCell className="font-mono text-foreground">{client.login}</TableCell>
+                        <TableCell>
+                          <Badge className={client.admin ? 'bg-destructive text-destructive-foreground' : 'bg-primary text-primary-foreground'}>
+                            {client.admin ? 'Админ' : 'Клиент'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleEditClient(client)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
