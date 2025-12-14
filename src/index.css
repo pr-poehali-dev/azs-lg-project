@@ -99,3 +99,106 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  header {
+    background: white !important;
+    border-bottom: 2px solid #333 !important;
+    padding: 10px 0 !important;
+  }
+
+  h1,
+  h2 {
+    color: #000 !important;
+  }
+
+  p {
+    color: #666 !important;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    page-break-inside: auto;
+  }
+
+  thead {
+    display: table-header-group;
+    background: #f5f5f5 !important;
+  }
+
+  tbody tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th,
+  td {
+    border: 1px solid #333 !important;
+    padding: 6px !important;
+    text-align: left;
+    color: black !important;
+    background: white !important;
+    font-size: 10pt !important;
+  }
+
+  th {
+    background: #e0e0e0 !important;
+    font-weight: bold !important;
+  }
+
+  [class*="bg-primary"],
+  [class*="bg-accent"],
+  [class*="bg-destructive"],
+  [class*="bg-secondary"] {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #333 !important;
+  }
+
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    padding: 0 20px !important;
+  }
+
+  .print-header {
+    display: block !important;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 2px solid #333;
+    background: #f9f9f9 !important;
+  }
+
+  .print-header h2 {
+    margin: 5px 0;
+    font-size: 14pt;
+  }
+
+  .print-header p {
+    margin: 3px 0;
+    font-size: 10pt;
+  }
+}

@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 
 interface ClientData {
@@ -21,6 +24,7 @@ interface FuelCard {
 
 interface Operation {
   id: number;
+  card_id: number;
   station_name: string;
   operation_date: string;
   operation_type: string;
@@ -50,6 +54,7 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
   const [operations] = useState<Operation[]>([
     {
       id: 1,
+      card_id: 1,
       station_name: 'АЗС СОЮЗ №5',
       operation_date: '2024-12-10 14:30',
       operation_type: 'пополнение',
@@ -60,6 +65,7 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     },
     {
       id: 2,
+      card_id: 1,
       station_name: 'АЗС СОЮЗ №3',
       operation_date: '2024-12-12 09:15',
       operation_type: 'заправка',
@@ -69,6 +75,27 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
       comment: 'Заправка автомобиля А123БВ'
     }
   ]);
+
+  const [selectedCard, setSelectedCard] = useState<number | null>(null);
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+
+  const filteredOperations = operations.filter(op => {
+    const matchesCard = selectedCard === null || op.card_id === selectedCard;
+    const matchesDateFrom = !dateFrom || op.operation_date >= dateFrom;
+    const matchesDateTo = !dateTo || op.operation_date <= dateTo + ' 23:59';
+    return matchesCard && matchesDateFrom && matchesDateTo;
+  });
+
+  const handlePrintOperations = () => {
+    window.print();
+  };
+
+  const handleShowAllOperations = () => {
+    setSelectedCard(null);
+    setDateFrom('');
+    setDateTo('');
+  };
 
   const getOperationColor = (type: string) => {
     switch (type) {
@@ -85,6 +112,8 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     }
   };
 
+  const selectedCardData = selectedCard ? cards.find(c => c.id === selectedCard) : null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
       <header className="bg-card border-b-4 border-accent shadow-lg">
@@ -96,12 +125,28 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
               <p className="text-sm text-muted-foreground">Кабинет клиента</p>
             </div>
           </div>
-          <Button onClick={onLogout} variant="outline" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+          <Button onClick={onLogout} variant="outline" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground no-print">
             <Icon name="LogOut" size={20} className="mr-2" />
             Выход
           </Button>
         </div>
       </header>
+
+      <div className="print-header" style={{ display: 'none' }}>
+        <h2>СЕТЬ АВТОЗАПРАВОЧНЫХ СТАНЦИЙ "СОЮЗ"</h2>
+        <h2>История операций по топливной карте</h2>
+        <p><strong>Клиент:</strong> {clientData.name}</p>
+        <p><strong>ИНН:</strong> {clientData.inn}</p>
+        {selectedCardData && (
+          <>
+            <p><strong>Номер карты:</strong> {selectedCardData.card_code}</p>
+            <p><strong>Вид топлива:</strong> {selectedCardData.fuel_type}</p>
+            <p><strong>Текущий баланс:</strong> {selectedCardData.balance_liters.toFixed(2)} л</p>
+          </>
+        )}
+        {dateFrom && <p><strong>Период с:</strong> {dateFrom}</p>}
+        {dateTo && <p><strong>Период по:</strong> {dateTo}</p>}
+      </div>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
@@ -142,17 +187,29 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
             <Table>
               <TableHeader>
                 <TableRow className="border-b-2 border-border">
-                  <TableHead className="text-foreground font-bold">Номер карты</TableHead>
-                  <TableHead className="text-foreground font-bold">Вид топлива</TableHead>
-                  <TableHead className="text-foreground font-bold text-right">Баланс (л)</TableHead>
+                  <TableHead className="text-foreground font-bold py-2">Номер карты</TableHead>
+                  <TableHead className="text-foreground font-bold py-2">Вид топлива</TableHead>
+                  <TableHead className="text-foreground font-bold text-right py-2">Баланс (л)</TableHead>
+                  <TableHead className="text-foreground font-bold text-center py-2 no-print">Действия</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {cards.map((card) => (
                   <TableRow key={card.id} className="border-b border-border">
-                    <TableCell className="font-mono text-lg text-accent">{card.card_code}</TableCell>
-                    <TableCell className="text-foreground">{card.fuel_type}</TableCell>
-                    <TableCell className="text-right font-bold text-lg text-accent">{card.balance_liters.toFixed(2)}</TableCell>
+                    <TableCell className="font-mono text-accent py-2">{card.card_code}</TableCell>
+                    <TableCell className="text-foreground py-2">{card.fuel_type}</TableCell>
+                    <TableCell className="text-right font-bold text-accent py-2">{card.balance_liters.toFixed(2)}</TableCell>
+                    <TableCell className="text-center py-2 no-print">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
+                        onClick={() => setSelectedCard(card.id)}
+                      >
+                        <Icon name="Eye" size={16} className="mr-1" />
+                        Показать операции
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -161,42 +218,114 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
         </Card>
 
         <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-2xl text-foreground flex items-center gap-2">
               <Icon name="History" size={28} className="text-accent" />
               История операций
             </CardTitle>
+            <div className="flex gap-2 no-print">
+              <Button
+                onClick={handleShowAllOperations}
+                variant="outline"
+                className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <Icon name="RotateCcw" size={16} className="mr-2" />
+                Показать все
+              </Button>
+              <Button
+                onClick={handlePrintOperations}
+                variant="outline"
+                className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <Icon name="Printer" size={16} className="mr-2" />
+                Печать
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 no-print">
+              <div className="space-y-2">
+                <Label className="text-foreground">Фильтр по карте</Label>
+                <Select value={selectedCard?.toString() || 'all'} onValueChange={(val) => setSelectedCard(val === 'all' ? null : parseInt(val))}>
+                  <SelectTrigger className="bg-input border-2 border-border text-foreground">
+                    <SelectValue placeholder="Все карты" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все карты</SelectItem>
+                    {cards.map((card) => (
+                      <SelectItem key={card.id} value={card.id.toString()}>
+                        {card.card_code} - {card.fuel_type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">Дата с</Label>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="bg-input border-2 border-border text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">Дата по</Label>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="bg-input border-2 border-border text-foreground"
+                />
+              </div>
+            </div>
+
+            {selectedCard && (
+              <div className="mb-4 p-3 bg-accent/10 border-2 border-accent rounded-lg">
+                <p className="text-foreground font-semibold">
+                  Карта: <span className="text-accent">{cards.find(c => c.id === selectedCard)?.card_code}</span> | 
+                  Баланс: <span className="text-accent">{cards.find(c => c.id === selectedCard)?.balance_liters.toFixed(2)} л</span>
+                </p>
+              </div>
+            )}
+
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b-2 border-border">
-                    <TableHead className="text-foreground font-bold">АЗС</TableHead>
-                    <TableHead className="text-foreground font-bold">Дата</TableHead>
-                    <TableHead className="text-foreground font-bold">Операция</TableHead>
-                    <TableHead className="text-foreground font-bold text-right">Литры</TableHead>
-                    <TableHead className="text-foreground font-bold text-right">Цена</TableHead>
-                    <TableHead className="text-foreground font-bold text-right">Сумма</TableHead>
-                    <TableHead className="text-foreground font-bold">Комментарий</TableHead>
+                    <TableHead className="text-foreground font-bold py-2">АЗС</TableHead>
+                    <TableHead className="text-foreground font-bold py-2">Дата</TableHead>
+                    <TableHead className="text-foreground font-bold py-2">Операция</TableHead>
+                    <TableHead className="text-foreground font-bold text-right py-2">Литры</TableHead>
+                    <TableHead className="text-foreground font-bold text-right py-2">Цена</TableHead>
+                    <TableHead className="text-foreground font-bold text-right py-2">Сумма</TableHead>
+                    <TableHead className="text-foreground font-bold py-2">Комментарий</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {operations.map((op) => (
-                    <TableRow key={op.id} className="border-b border-border">
-                      <TableCell className="text-foreground">{op.station_name}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{op.operation_date}</TableCell>
-                      <TableCell>
-                        <Badge className={getOperationColor(op.operation_type)}>
-                          {op.operation_type}
-                        </Badge>
+                  {filteredOperations.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        Операций не найдено
                       </TableCell>
-                      <TableCell className="text-right font-semibold text-foreground">{op.quantity.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-foreground">{op.price.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-bold text-accent">{op.amount.toFixed(2)} ₽</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{op.comment}</TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredOperations.map((op) => (
+                      <TableRow key={op.id} className="border-b border-border">
+                        <TableCell className="text-foreground py-2">{op.station_name}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm py-2">{op.operation_date}</TableCell>
+                        <TableCell className="py-2">
+                          <Badge className={getOperationColor(op.operation_type)}>
+                            {op.operation_type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-foreground py-2">{op.quantity.toFixed(2)}</TableCell>
+                        <TableCell className="text-right text-foreground py-2">{op.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-bold text-accent py-2">{op.amount.toFixed(2)} ₽</TableCell>
+                        <TableCell className="text-muted-foreground text-sm py-2">{op.comment}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
