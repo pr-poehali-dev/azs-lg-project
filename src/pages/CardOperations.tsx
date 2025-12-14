@@ -293,7 +293,7 @@ export default function CardOperations() {
                     <TableHead className="text-foreground font-bold py-2">Операция</TableHead>
                     <TableHead className="text-foreground font-bold text-right py-2">Литры</TableHead>
                     <TableHead className="text-foreground font-bold text-right py-2">Цена</TableHead>
-                    <TableHead className="text-foreground font-bold text-right py-2">Баланс</TableHead>
+                    <TableHead className="text-foreground font-bold text-right py-2">Сумма</TableHead>
                     <TableHead className="text-foreground font-bold py-2">Комментарий</TableHead>
                   </TableRow>
                 </TableHeader>
