@@ -189,7 +189,7 @@ export default function CardOperations() {
       </div>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
+        <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm no-print">
           <CardHeader>
             <CardTitle className="text-2xl text-foreground flex items-center gap-2">
               <Icon name="Building2" size={28} className="text-accent" />
@@ -209,7 +209,7 @@ export default function CardOperations() {
         </Card>
 
         {selectedCardData && (
-          <Card className="border-2 border-accent bg-accent/10 backdrop-blur-sm">
+          <Card className="border-2 border-accent bg-accent/10 backdrop-blur-sm no-print">
             <CardContent className="py-4">
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="space-y-1">
@@ -293,7 +293,8 @@ export default function CardOperations() {
                     <TableHead className="text-foreground font-bold py-2">Операция</TableHead>
                     <TableHead className="text-foreground font-bold text-right py-2">Литры</TableHead>
                     <TableHead className="text-foreground font-bold text-right py-2">Цена</TableHead>
-                    <TableHead className="text-foreground font-bold text-right py-2">Сумма</TableHead>
+                    <TableHead className="text-foreground font-bold text-right py-2 no-print">Сумма</TableHead>
+                    <TableHead className="text-foreground font-bold text-right py-2">Баланс</TableHead>
                     <TableHead className="text-foreground font-bold py-2">Комментарий</TableHead>
                   </TableRow>
                 </TableHeader>
