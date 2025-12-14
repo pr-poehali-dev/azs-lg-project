@@ -238,7 +238,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const handleCreateOperation = () => {
     const newId = operations.length > 0 ? Math.max(...operations.map(o => o.id)) + 1 : 1;
-    const updatedOperations = [...operations, { id: newId, ...newOperation }];
+    const newOp = { id: newId, ...newOperation };
+    const updatedOperations = [...operations, newOp];
     setOperations(updatedOperations);
     
     const cardCode = newOperation.card_code;
@@ -264,15 +265,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsAddOperationDialogOpen(false);
   };
 
-  const filteredOperations = operations.filter(operation => {
-    if (filterCard !== 'all' && operation.card_code !== filterCard) return false;
-    if (filterStation !== 'all' && operation.station_name !== filterStation) return false;
-    if (filterOperationType !== 'all' && operation.operation_type !== filterOperationType) return false;
+  const filteredOperations = operations.filter(op => {
+    if (filterCard !== 'all' && op.card_code !== filterCard) return false;
+    if (filterStation !== 'all' && op.station_name !== filterStation) return false;
+    if (filterOperationType !== 'all' && op.operation_type !== filterOperationType) return false;
     return true;
   });
 
   const uniqueCardCodes = Array.from(new Set(operations.map(o => o.card_code)));
-  const uniqueStations = Array.from(new Set(operations.map(o => o.station_name)));
+  const uniqueStationNames = Array.from(new Set(operations.map(o => o.station_name)));
   const uniqueOperationTypes = Array.from(new Set(operations.map(o => o.operation_type)));
 
   const handlePrintClients = () => {
@@ -291,19 +292,34 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     window.print();
   };
 
+  const getOperationColor = (type: string) => {
+    switch (type) {
+      case 'пополнение':
+        return 'bg-primary text-primary-foreground';
+      case 'заправка':
+        return 'bg-accent text-accent-foreground';
+      case 'списание':
+        return 'bg-destructive text-destructive-foreground';
+      case 'оприходование':
+        return 'bg-secondary text-secondary-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b no-print">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
+      <header className="bg-card border-b-4 border-accent shadow-lg no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <Icon name="Shield" className="w-8 h-8 text-blue-600" />
+              <Icon name="Shield" className="w-8 h-8 text-accent" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Панель администратора</h1>
-                <p className="text-sm text-gray-600">Управление системой</p>
+                <h1 className="text-2xl font-bold text-accent">Панель администратора</h1>
+                <p className="text-sm text-muted-foreground">Управление системой</p>
               </div>
             </div>
-            <Button onClick={onLogout} variant="outline" className="flex items-center gap-2">
+            <Button onClick={onLogout} variant="outline" className="flex items-center gap-2 border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
               <Icon name="LogOut" className="w-4 h-4" />
               Выход
             </Button>
@@ -313,67 +329,70 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="clients" className="space-y-6">
-          <TabsList className="no-print">
-            <TabsTrigger value="clients">Клиенты</TabsTrigger>
-            <TabsTrigger value="cards">Карты</TabsTrigger>
-            <TabsTrigger value="operations">Операции</TabsTrigger>
-            <TabsTrigger value="fuel-types">Виды топлива</TabsTrigger>
+          <TabsList className="no-print bg-card/50 border-2 border-primary">
+            <TabsTrigger value="clients" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">Клиенты</TabsTrigger>
+            <TabsTrigger value="cards" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">Карты</TabsTrigger>
+            <TabsTrigger value="operations" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">Операции</TabsTrigger>
+            <TabsTrigger value="fuel-types" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">Виды топлива</TabsTrigger>
           </TabsList>
 
           <TabsContent value="clients">
-            <Card>
+            <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle>Клиенты</CardTitle>
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Icon name="Users" className="text-accent" />
+                    Клиенты
+                  </CardTitle>
                   <div className="flex gap-2">
-                    <Button onClick={handlePrintClients} variant="outline" size="sm">
+                    <Button onClick={handlePrintClients} variant="outline" size="sm" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
                     </Button>
                     <Dialog open={isAddClientDialogOpen} onOpenChange={setIsAddClientDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm">
+                        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
                           <Icon name="Plus" className="w-4 h-4 mr-2" />
                           Добавить
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
+                      <DialogContent className="max-w-2xl bg-card border-2 border-primary">
                         <DialogHeader>
-                          <DialogTitle>Добавить клиента</DialogTitle>
+                          <DialogTitle className="text-foreground">Добавить клиента</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-inn" className="text-right">ИНН</Label>
+                            <Label htmlFor="new-inn" className="text-right text-foreground">ИНН</Label>
                             <Input id="new-inn" value={newClient.inn} onChange={(e) => setNewClient({...newClient, inn: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-name" className="text-right">Название</Label>
+                            <Label htmlFor="new-name" className="text-right text-foreground">Название</Label>
                             <Input id="new-name" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-address" className="text-right">Адрес</Label>
+                            <Label htmlFor="new-address" className="text-right text-foreground">Адрес</Label>
                             <Input id="new-address" value={newClient.address} onChange={(e) => setNewClient({...newClient, address: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-phone" className="text-right">Телефон</Label>
+                            <Label htmlFor="new-phone" className="text-right text-foreground">Телефон</Label>
                             <Input id="new-phone" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-email" className="text-right">Email</Label>
+                            <Label htmlFor="new-email" className="text-right text-foreground">Email</Label>
                             <Input id="new-email" type="email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-login" className="text-right">Логин</Label>
+                            <Label htmlFor="new-login" className="text-right text-foreground">Логин</Label>
                             <Input id="new-login" value={newClient.login} onChange={(e) => setNewClient({...newClient, login: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-password" className="text-right">Пароль</Label>
+                            <Label htmlFor="new-password" className="text-right text-foreground">Пароль</Label>
                             <Input id="new-password" type="password" value={newClient.password} onChange={(e) => setNewClient({...newClient, password: e.target.value})} className="col-span-3" />
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setIsAddClientDialogOpen(false)}>Отмена</Button>
-                          <Button onClick={handleCreateClient}>Создать</Button>
+                          <Button variant="outline" onClick={() => setIsAddClientDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+                          <Button onClick={handleCreateClient} className="bg-accent text-accent-foreground hover:bg-accent/90">Создать</Button>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -383,28 +402,28 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardContent>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>ИНН</TableHead>
-                      <TableHead>Название</TableHead>
-                      <TableHead>Адрес</TableHead>
-                      <TableHead>Телефон</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Логин</TableHead>
-                      <TableHead>Действия</TableHead>
+                    <TableRow className="border-b-2 border-border">
+                      <TableHead className="text-foreground font-bold">ИНН</TableHead>
+                      <TableHead className="text-foreground font-bold">Название</TableHead>
+                      <TableHead className="text-foreground font-bold">Адрес</TableHead>
+                      <TableHead className="text-foreground font-bold">Телефон</TableHead>
+                      <TableHead className="text-foreground font-bold">Email</TableHead>
+                      <TableHead className="text-foreground font-bold">Логин</TableHead>
+                      <TableHead className="text-foreground font-bold">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {clients.map((client) => (
-                      <TableRow key={client.id}>
-                        <TableCell className="font-mono">{client.inn}</TableCell>
-                        <TableCell className="font-medium">{client.name}</TableCell>
-                        <TableCell>{client.address}</TableCell>
-                        <TableCell>{client.phone}</TableCell>
-                        <TableCell>{client.email}</TableCell>
-                        <TableCell className="font-mono">{client.login}</TableCell>
+                      <TableRow key={client.id} className="border-b border-border">
+                        <TableCell className="font-mono text-foreground">{client.inn}</TableCell>
+                        <TableCell className="font-medium text-foreground">{client.name}</TableCell>
+                        <TableCell className="text-foreground">{client.address}</TableCell>
+                        <TableCell className="text-foreground">{client.phone}</TableCell>
+                        <TableCell className="text-foreground">{client.email}</TableCell>
+                        <TableCell className="font-mono text-foreground">{client.login}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEditClient(client)}>
+                            <Button size="sm" variant="outline" onClick={() => handleEditClient(client)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                               <Icon name="Pencil" className="w-4 h-4" />
                             </Button>
                             <Button size="sm" variant="destructive" onClick={() => handleDeleteClient(client.id)}>
@@ -421,51 +440,54 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </TabsContent>
 
           <TabsContent value="cards">
-            <Card>
+            <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle>Карты</CardTitle>
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Icon name="CreditCard" className="text-accent" />
+                    Карты
+                  </CardTitle>
                   <div className="flex gap-2">
-                    <Button onClick={handlePrintCards} variant="outline" size="sm">
+                    <Button onClick={handlePrintCards} variant="outline" size="sm" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
                     </Button>
                     <Dialog open={isAddCardDialogOpen} onOpenChange={setIsAddCardDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm">
+                        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
                           <Icon name="Plus" className="w-4 h-4 mr-2" />
                           Добавить
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
+                      <DialogContent className="max-w-2xl bg-card border-2 border-primary">
                         <DialogHeader>
-                          <DialogTitle>Добавить карту</DialogTitle>
+                          <DialogTitle className="text-foreground">Добавить карту</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-card-code" className="text-right">Код карты</Label>
+                            <Label htmlFor="new-card-code" className="text-right text-foreground">Код карты</Label>
                             <Input id="new-card-code" value={newCard.card_code} onChange={(e) => setNewCard({...newCard, card_code: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-card-client" className="text-right">Клиент</Label>
+                            <Label htmlFor="new-card-client" className="text-right text-foreground">Клиент</Label>
                             <Input id="new-card-client" value={newCard.client_name} onChange={(e) => setNewCard({...newCard, client_name: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-card-fuel" className="text-right">Вид топлива</Label>
+                            <Label htmlFor="new-card-fuel" className="text-right text-foreground">Вид топлива</Label>
                             <Input id="new-card-fuel" value={newCard.fuel_type} onChange={(e) => setNewCard({...newCard, fuel_type: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-card-balance" className="text-right">Баланс (л)</Label>
+                            <Label htmlFor="new-card-balance" className="text-right text-foreground">Баланс (л)</Label>
                             <Input id="new-card-balance" type="number" value={newCard.balance_liters} onChange={(e) => setNewCard({...newCard, balance_liters: parseFloat(e.target.value)})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-card-pin" className="text-right">PIN-код</Label>
+                            <Label htmlFor="new-card-pin" className="text-right text-foreground">PIN-код</Label>
                             <Input id="new-card-pin" type="password" value={newCard.pin_code} onChange={(e) => setNewCard({...newCard, pin_code: e.target.value})} className="col-span-3" />
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setIsAddCardDialogOpen(false)}>Отмена</Button>
-                          <Button onClick={handleCreateCard}>Создать</Button>
+                          <Button variant="outline" onClick={() => setIsAddCardDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+                          <Button onClick={handleCreateCard} className="bg-accent text-accent-foreground hover:bg-accent/90">Создать</Button>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -475,28 +497,28 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <Label>Клиент</Label>
+                    <Label className="text-foreground">Клиент</Label>
                     <Select value={filterCardClient} onValueChange={setFilterCardClient}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все клиенты" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Все клиенты</SelectItem>
-                        {uniqueClientNames.map(name => (
+                        {uniqueClientNames.map((name) => (
                           <SelectItem key={name} value={name}>{name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Вид топлива</Label>
+                    <Label className="text-foreground">Вид топлива</Label>
                     <Select value={filterCardFuelType} onValueChange={setFilterCardFuelType}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Все виды" />
+                        <SelectValue placeholder="Все виды топлива" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Все виды</SelectItem>
-                        {uniqueCardFuelTypes.map(type => (
+                        <SelectItem value="all">Все виды топлива</SelectItem>
+                        {uniqueCardFuelTypes.map((type) => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                       </SelectContent>
@@ -505,26 +527,26 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Код карты</TableHead>
-                      <TableHead>Клиент</TableHead>
-                      <TableHead>Вид топлива</TableHead>
-                      <TableHead>Баланс (л)</TableHead>
-                      <TableHead>PIN-код</TableHead>
-                      <TableHead>Действия</TableHead>
+                    <TableRow className="border-b-2 border-border">
+                      <TableHead className="text-foreground font-bold">Код карты</TableHead>
+                      <TableHead className="text-foreground font-bold">Клиент</TableHead>
+                      <TableHead className="text-foreground font-bold">Вид топлива</TableHead>
+                      <TableHead className="text-foreground font-bold">Баланс (л)</TableHead>
+                      <TableHead className="text-foreground font-bold">PIN-код</TableHead>
+                      <TableHead className="text-foreground font-bold">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredCards.map((card) => (
-                      <TableRow key={card.id}>
-                        <TableCell className="font-mono">{card.card_code}</TableCell>
-                        <TableCell>{card.client_name}</TableCell>
-                        <TableCell><Badge variant="outline">{card.fuel_type}</Badge></TableCell>
-                        <TableCell className="font-mono">{card.balance_liters.toFixed(2)}</TableCell>
-                        <TableCell className="font-mono">{card.pin_code}</TableCell>
+                      <TableRow key={card.id} className="border-b border-border">
+                        <TableCell className="font-mono text-accent">{card.card_code}</TableCell>
+                        <TableCell className="text-foreground">{card.client_name}</TableCell>
+                        <TableCell className="text-foreground">{card.fuel_type}</TableCell>
+                        <TableCell className="font-bold text-accent">{card.balance_liters.toFixed(2)}</TableCell>
+                        <TableCell className="font-mono text-muted-foreground">{card.pin_code}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEditCard(card)}>
+                            <Button size="sm" variant="outline" onClick={() => handleEditCard(card)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                               <Icon name="Pencil" className="w-4 h-4" />
                             </Button>
                             <Button size="sm" variant="destructive" onClick={() => handleDeleteCard(card.id)}>
@@ -541,41 +563,44 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </TabsContent>
 
           <TabsContent value="operations">
-            <Card>
+            <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle>Операции</CardTitle>
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Icon name="History" className="text-accent" />
+                    Операции
+                  </CardTitle>
                   <div className="flex gap-2">
-                    <Button onClick={handlePrintOperations} variant="outline" size="sm">
+                    <Button onClick={handlePrintOperations} variant="outline" size="sm" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
                     </Button>
                     <Dialog open={isAddOperationDialogOpen} onOpenChange={setIsAddOperationDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm">
+                        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
                           <Icon name="Plus" className="w-4 h-4 mr-2" />
                           Добавить
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
+                      <DialogContent className="max-w-2xl bg-card border-2 border-primary">
                         <DialogHeader>
-                          <DialogTitle>Добавить операцию</DialogTitle>
+                          <DialogTitle className="text-foreground">Добавить операцию</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-card" className="text-right">Код карты</Label>
+                            <Label htmlFor="new-op-card" className="text-right text-foreground">Код карты</Label>
                             <Input id="new-op-card" value={newOperation.card_code} onChange={(e) => setNewOperation({...newOperation, card_code: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-station" className="text-right">АЗС</Label>
+                            <Label htmlFor="new-op-station" className="text-right text-foreground">АЗС</Label>
                             <Input id="new-op-station" value={newOperation.station_name} onChange={(e) => setNewOperation({...newOperation, station_name: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-date" className="text-right">Дата</Label>
+                            <Label htmlFor="new-op-date" className="text-right text-foreground">Дата</Label>
                             <Input id="new-op-date" type="datetime-local" value={newOperation.operation_date} onChange={(e) => setNewOperation({...newOperation, operation_date: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-type" className="text-right">Тип</Label>
+                            <Label htmlFor="new-op-type" className="text-right text-foreground">Тип операции</Label>
                             <Select value={newOperation.operation_type} onValueChange={(value) => setNewOperation({...newOperation, operation_type: value})}>
                               <SelectTrigger className="col-span-3">
                                 <SelectValue />
@@ -583,31 +608,31 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               <SelectContent>
                                 <SelectItem value="пополнение">Пополнение</SelectItem>
                                 <SelectItem value="заправка">Заправка</SelectItem>
-                                <SelectItem value="оприходование">Оприходование</SelectItem>
                                 <SelectItem value="списание">Списание</SelectItem>
+                                <SelectItem value="оприходование">Оприходование</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-quantity" className="text-right">Количество (л)</Label>
-                            <Input id="new-op-quantity" type="number" step="0.01" value={newOperation.quantity} onChange={(e) => setNewOperation({...newOperation, quantity: parseFloat(e.target.value)})} className="col-span-3" />
+                            <Label htmlFor="new-op-quantity" className="text-right text-foreground">Литры</Label>
+                            <Input id="new-op-quantity" type="number" value={newOperation.quantity} onChange={(e) => setNewOperation({...newOperation, quantity: parseFloat(e.target.value)})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-price" className="text-right">Цена (₽/л)</Label>
-                            <Input id="new-op-price" type="number" step="0.01" value={newOperation.price} onChange={(e) => setNewOperation({...newOperation, price: parseFloat(e.target.value)})} className="col-span-3" />
+                            <Label htmlFor="new-op-price" className="text-right text-foreground">Цена</Label>
+                            <Input id="new-op-price" type="number" value={newOperation.price} onChange={(e) => setNewOperation({...newOperation, price: parseFloat(e.target.value)})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-amount" className="text-right">Сумма (₽)</Label>
-                            <Input id="new-op-amount" type="number" step="0.01" value={newOperation.amount} onChange={(e) => setNewOperation({...newOperation, amount: parseFloat(e.target.value)})} className="col-span-3" />
+                            <Label htmlFor="new-op-amount" className="text-right text-foreground">Сумма</Label>
+                            <Input id="new-op-amount" type="number" value={newOperation.amount} onChange={(e) => setNewOperation({...newOperation, amount: parseFloat(e.target.value)})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-op-comment" className="text-right">Комментарий</Label>
+                            <Label htmlFor="new-op-comment" className="text-right text-foreground">Комментарий</Label>
                             <Input id="new-op-comment" value={newOperation.comment} onChange={(e) => setNewOperation({...newOperation, comment: e.target.value})} className="col-span-3" />
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setIsAddOperationDialogOpen(false)}>Отмена</Button>
-                          <Button onClick={handleCreateOperation}>Создать</Button>
+                          <Button variant="outline" onClick={() => setIsAddOperationDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+                          <Button onClick={handleCreateOperation} className="bg-accent text-accent-foreground hover:bg-accent/90">Создать</Button>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -617,129 +642,134 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div>
-                    <Label>Карта</Label>
+                    <Label className="text-foreground">Карта</Label>
                     <Select value={filterCard} onValueChange={setFilterCard}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все карты" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Все карты</SelectItem>
-                        {uniqueCardCodes.map(code => (
+                        {uniqueCardCodes.map((code) => (
                           <SelectItem key={code} value={code}>{code}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>АЗС</Label>
+                    <Label className="text-foreground">АЗС</Label>
                     <Select value={filterStation} onValueChange={setFilterStation}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все АЗС" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Все АЗС</SelectItem>
-                        {uniqueStations.map(station => (
-                          <SelectItem key={station} value={station}>{station}</SelectItem>
+                        {uniqueStationNames.map((name) => (
+                          <SelectItem key={name} value={name}>{name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Тип операции</Label>
+                    <Label className="text-foreground">Тип операции</Label>
                     <Select value={filterOperationType} onValueChange={setFilterOperationType}>
                       <SelectTrigger>
                         <SelectValue placeholder="Все типы" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Все типы</SelectItem>
-                        {uniqueOperationTypes.map(type => (
+                        {uniqueOperationTypes.map((type) => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Дата</TableHead>
-                      <TableHead>Карта</TableHead>
-                      <TableHead>АЗС</TableHead>
-                      <TableHead>Тип</TableHead>
-                      <TableHead>Количество (л)</TableHead>
-                      <TableHead>Цена (₽/л)</TableHead>
-                      <TableHead>Сумма (₽)</TableHead>
-                      <TableHead>Комментарий</TableHead>
-                      <TableHead>Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredOperations.map((operation) => (
-                      <TableRow key={operation.id}>
-                        <TableCell className="font-mono text-sm">{operation.operation_date}</TableCell>
-                        <TableCell className="font-mono">{operation.card_code}</TableCell>
-                        <TableCell>{operation.station_name}</TableCell>
-                        <TableCell>
-                          <Badge variant={operation.operation_type === 'заправка' || operation.operation_type === 'списание' ? 'destructive' : 'default'}>
-                            {operation.operation_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-mono">{operation.quantity.toFixed(2)}</TableCell>
-                        <TableCell className="font-mono">{operation.price.toFixed(2)}</TableCell>
-                        <TableCell className="font-mono">{operation.amount.toFixed(2)}</TableCell>
-                        <TableCell>{operation.comment}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEditOperation(operation)}>
-                              <Icon name="Pencil" className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleDeleteOperation(operation.id)}>
-                              <Icon name="Trash2" className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-b-2 border-border">
+                        <TableHead className="text-foreground font-bold">Карта</TableHead>
+                        <TableHead className="text-foreground font-bold">АЗС</TableHead>
+                        <TableHead className="text-foreground font-bold">Дата</TableHead>
+                        <TableHead className="text-foreground font-bold">Операция</TableHead>
+                        <TableHead className="text-foreground font-bold">Литры</TableHead>
+                        <TableHead className="text-foreground font-bold">Цена</TableHead>
+                        <TableHead className="text-foreground font-bold">Сумма</TableHead>
+                        <TableHead className="text-foreground font-bold">Комментарий</TableHead>
+                        <TableHead className="text-foreground font-bold">Действия</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOperations.map((op) => (
+                        <TableRow key={op.id} className="border-b border-border">
+                          <TableCell className="font-mono text-accent">{op.card_code}</TableCell>
+                          <TableCell className="text-foreground">{op.station_name}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{op.operation_date}</TableCell>
+                          <TableCell>
+                            <Badge className={getOperationColor(op.operation_type)}>
+                              {op.operation_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-semibold text-foreground">{op.quantity.toFixed(2)}</TableCell>
+                          <TableCell className="text-foreground">{op.price.toFixed(2)}</TableCell>
+                          <TableCell className="font-bold text-accent">{op.amount.toFixed(2)} ₽</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{op.comment}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => handleEditOperation(op)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                                <Icon name="Pencil" className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => handleDeleteOperation(op.id)}>
+                                <Icon name="Trash2" className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="fuel-types">
-            <Card>
+            <Card className="border-2 border-primary bg-card/95 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle>Виды топлива</CardTitle>
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Icon name="Fuel" className="text-accent" />
+                    Виды топлива
+                  </CardTitle>
                   <div className="flex gap-2">
-                    <Button onClick={handlePrintFuelTypes} variant="outline" size="sm">
+                    <Button onClick={handlePrintFuelTypes} variant="outline" size="sm" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
                     </Button>
                     <Dialog open={isAddFuelTypeDialogOpen} onOpenChange={setIsAddFuelTypeDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm">
+                        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
                           <Icon name="Plus" className="w-4 h-4 mr-2" />
                           Добавить
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="max-w-2xl bg-card border-2 border-primary">
                         <DialogHeader>
-                          <DialogTitle>Добавить вид топлива</DialogTitle>
+                          <DialogTitle className="text-foreground">Добавить вид топлива</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-fuel-name" className="text-right">Название</Label>
+                            <Label htmlFor="new-fuel-name" className="text-right text-foreground">Название</Label>
                             <Input id="new-fuel-name" value={newFuelType.name} onChange={(e) => setNewFuelType({...newFuelType, name: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-fuel-code" className="text-right">Код 1С</Label>
+                            <Label htmlFor="new-fuel-code" className="text-right text-foreground">Код 1С</Label>
                             <Input id="new-fuel-code" value={newFuelType.code_1c} onChange={(e) => setNewFuelType({...newFuelType, code_1c: e.target.value})} className="col-span-3" />
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setIsAddFuelTypeDialogOpen(false)}>Отмена</Button>
-                          <Button onClick={handleCreateFuelType}>Создать</Button>
+                          <Button variant="outline" onClick={() => setIsAddFuelTypeDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+                          <Button onClick={handleCreateFuelType} className="bg-accent text-accent-foreground hover:bg-accent/90">Создать</Button>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -749,20 +779,20 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardContent>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Название</TableHead>
-                      <TableHead>Код 1С</TableHead>
-                      <TableHead>Действия</TableHead>
+                    <TableRow className="border-b-2 border-border">
+                      <TableHead className="text-foreground font-bold">Название</TableHead>
+                      <TableHead className="text-foreground font-bold">Код 1С</TableHead>
+                      <TableHead className="text-foreground font-bold">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {fuelTypes.map((fuelType) => (
-                      <TableRow key={fuelType.id}>
-                        <TableCell className="font-medium">{fuelType.name}</TableCell>
-                        <TableCell className="font-mono">{fuelType.code_1c}</TableCell>
+                      <TableRow key={fuelType.id} className="border-b border-border">
+                        <TableCell className="font-medium text-foreground">{fuelType.name}</TableCell>
+                        <TableCell className="font-mono text-muted-foreground">{fuelType.code_1c}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEditFuelType(fuelType)}>
+                            <Button size="sm" variant="outline" onClick={() => handleEditFuelType(fuelType)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                               <Icon name="Pencil" className="w-4 h-4" />
                             </Button>
                             <Button size="sm" variant="destructive" onClick={() => handleDeleteFuelType(fuelType.id)}>
@@ -781,102 +811,102 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       </main>
 
       <Dialog open={isClientDialogOpen} onOpenChange={setIsClientDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-2 border-primary">
           <DialogHeader>
-            <DialogTitle>Редактировать клиента</DialogTitle>
+            <DialogTitle className="text-foreground">Редактировать клиента</DialogTitle>
           </DialogHeader>
           {editingClient && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="inn" className="text-right">ИНН</Label>
-                <Input id="inn" value={editingClient.inn} onChange={(e) => setEditingClient({...editingClient, inn: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-inn" className="text-right text-foreground">ИНН</Label>
+                <Input id="edit-inn" value={editingClient.inn} onChange={(e) => setEditingClient({...editingClient, inn: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Название</Label>
-                <Input id="name" value={editingClient.name} onChange={(e) => setEditingClient({...editingClient, name: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-name" className="text-right text-foreground">Название</Label>
+                <Input id="edit-name" value={editingClient.name} onChange={(e) => setEditingClient({...editingClient, name: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="address" className="text-right">Адрес</Label>
-                <Input id="address" value={editingClient.address} onChange={(e) => setEditingClient({...editingClient, address: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-address" className="text-right text-foreground">Адрес</Label>
+                <Input id="edit-address" value={editingClient.address} onChange={(e) => setEditingClient({...editingClient, address: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">Телефон</Label>
-                <Input id="phone" value={editingClient.phone} onChange={(e) => setEditingClient({...editingClient, phone: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-phone" className="text-right text-foreground">Телефон</Label>
+                <Input id="edit-phone" value={editingClient.phone} onChange={(e) => setEditingClient({...editingClient, phone: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">Email</Label>
-                <Input id="email" type="email" value={editingClient.email} onChange={(e) => setEditingClient({...editingClient, email: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-email" className="text-right text-foreground">Email</Label>
+                <Input id="edit-email" value={editingClient.email} onChange={(e) => setEditingClient({...editingClient, email: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="login" className="text-right">Логин</Label>
-                <Input id="login" value={editingClient.login} onChange={(e) => setEditingClient({...editingClient, login: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-login" className="text-right text-foreground">Логин</Label>
+                <Input id="edit-login" value={editingClient.login} onChange={(e) => setEditingClient({...editingClient, login: e.target.value})} className="col-span-3" />
               </div>
             </div>
           )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsClientDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleSaveClient}>Сохранить</Button>
+            <Button variant="outline" onClick={() => setIsClientDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+            <Button onClick={handleSaveClient} className="bg-accent text-accent-foreground hover:bg-accent/90">Сохранить</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isCardDialogOpen} onOpenChange={setIsCardDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-2 border-primary">
           <DialogHeader>
-            <DialogTitle>Редактировать карту</DialogTitle>
+            <DialogTitle className="text-foreground">Редактировать карту</DialogTitle>
           </DialogHeader>
           {editingCard && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="card-code" className="text-right">Код карты</Label>
-                <Input id="card-code" value={editingCard.card_code} onChange={(e) => setEditingCard({...editingCard, card_code: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-card-code" className="text-right text-foreground">Код карты</Label>
+                <Input id="edit-card-code" value={editingCard.card_code} onChange={(e) => setEditingCard({...editingCard, card_code: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="client-name" className="text-right">Клиент</Label>
-                <Input id="client-name" value={editingCard.client_name} onChange={(e) => setEditingCard({...editingCard, client_name: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-card-client" className="text-right text-foreground">Клиент</Label>
+                <Input id="edit-card-client" value={editingCard.client_name} onChange={(e) => setEditingCard({...editingCard, client_name: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="fuel-type" className="text-right">Вид топлива</Label>
-                <Input id="fuel-type" value={editingCard.fuel_type} onChange={(e) => setEditingCard({...editingCard, fuel_type: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-card-fuel" className="text-right text-foreground">Вид топлива</Label>
+                <Input id="edit-card-fuel" value={editingCard.fuel_type} onChange={(e) => setEditingCard({...editingCard, fuel_type: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="balance" className="text-right">Баланс (л)</Label>
-                <Input id="balance" type="number" value={editingCard.balance_liters} onChange={(e) => setEditingCard({...editingCard, balance_liters: parseFloat(e.target.value)})} className="col-span-3" />
+                <Label htmlFor="edit-card-balance" className="text-right text-foreground">Баланс (л)</Label>
+                <Input id="edit-card-balance" type="number" value={editingCard.balance_liters} onChange={(e) => setEditingCard({...editingCard, balance_liters: parseFloat(e.target.value)})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="pin-code" className="text-right">PIN-код</Label>
-                <Input id="pin-code" type="password" value={editingCard.pin_code} onChange={(e) => setEditingCard({...editingCard, pin_code: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-card-pin" className="text-right text-foreground">PIN-код</Label>
+                <Input id="edit-card-pin" type="password" value={editingCard.pin_code} onChange={(e) => setEditingCard({...editingCard, pin_code: e.target.value})} className="col-span-3" />
               </div>
             </div>
           )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsCardDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleSaveCard}>Сохранить</Button>
+            <Button variant="outline" onClick={() => setIsCardDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+            <Button onClick={handleSaveCard} className="bg-accent text-accent-foreground hover:bg-accent/90">Сохранить</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isOperationDialogOpen} onOpenChange={setIsOperationDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-2 border-primary">
           <DialogHeader>
-            <DialogTitle>Редактировать операцию</DialogTitle>
+            <DialogTitle className="text-foreground">Редактировать операцию</DialogTitle>
           </DialogHeader>
           {editingOperation && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="op-card" className="text-right">Код карты</Label>
-                <Input id="op-card" value={editingOperation.card_code} onChange={(e) => setEditingOperation({...editingOperation, card_code: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-op-card" className="text-right text-foreground">Код карты</Label>
+                <Input id="edit-op-card" value={editingOperation.card_code} onChange={(e) => setEditingOperation({...editingOperation, card_code: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="op-station" className="text-right">АЗС</Label>
-                <Input id="op-station" value={editingOperation.station_name} onChange={(e) => setEditingOperation({...editingOperation, station_name: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-op-station" className="text-right text-foreground">АЗС</Label>
+                <Input id="edit-op-station" value={editingOperation.station_name} onChange={(e) => setEditingOperation({...editingOperation, station_name: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="op-date" className="text-right">Дата</Label>
-                <Input id="op-date" value={editingOperation.operation_date} onChange={(e) => setEditingOperation({...editingOperation, operation_date: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-op-date" className="text-right text-foreground">Дата</Label>
+                <Input id="edit-op-date" value={editingOperation.operation_date} onChange={(e) => setEditingOperation({...editingOperation, operation_date: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="op-type" className="text-right">Тип</Label>
+                <Label htmlFor="edit-op-type" className="text-right text-foreground">Тип операции</Label>
                 <Select value={editingOperation.operation_type} onValueChange={(value) => setEditingOperation({...editingOperation, operation_type: value})}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue />
@@ -884,75 +914,72 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <SelectContent>
                     <SelectItem value="пополнение">Пополнение</SelectItem>
                     <SelectItem value="заправка">Заправка</SelectItem>
-                    <SelectItem value="оприходование">Оприходование</SelectItem>
                     <SelectItem value="списание">Списание</SelectItem>
+                    <SelectItem value="оприходование">Оприходование</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="op-quantity" className="text-right">Количество (л)</Label>
-                <Input id="op-quantity" type="number" step="0.01" value={editingOperation.quantity} onChange={(e) => setEditingOperation({...editingOperation, quantity: parseFloat(e.target.value)})} className="col-span-3" />
+                <Label htmlFor="edit-op-quantity" className="text-right text-foreground">Литры</Label>
+                <Input id="edit-op-quantity" type="number" value={editingOperation.quantity} onChange={(e) => setEditingOperation({...editingOperation, quantity: parseFloat(e.target.value)})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="op-price" className="text-right">Цена (₽/л)</Label>
-                <Input id="op-price" type="number" step="0.01" value={editingOperation.price} onChange={(e) => setEditingOperation({...editingOperation, price: parseFloat(e.target.value)})} className="col-span-3" />
+                <Label htmlFor="edit-op-price" className="text-right text-foreground">Цена</Label>
+                <Input id="edit-op-price" type="number" value={editingOperation.price} onChange={(e) => setEditingOperation({...editingOperation, price: parseFloat(e.target.value)})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="op-amount" className="text-right">Сумма (₽)</Label>
-                <Input id="op-amount" type="number" step="0.01" value={editingOperation.amount} onChange={(e) => setEditingOperation({...editingOperation, amount: parseFloat(e.target.value)})} className="col-span-3" />
+                <Label htmlFor="edit-op-amount" className="text-right text-foreground">Сумма</Label>
+                <Input id="edit-op-amount" type="number" value={editingOperation.amount} onChange={(e) => setEditingOperation({...editingOperation, amount: parseFloat(e.target.value)})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="op-comment" className="text-right">Комментарий</Label>
-                <Input id="op-comment" value={editingOperation.comment} onChange={(e) => setEditingOperation({...editingOperation, comment: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-op-comment" className="text-right text-foreground">Комментарий</Label>
+                <Input id="edit-op-comment" value={editingOperation.comment} onChange={(e) => setEditingOperation({...editingOperation, comment: e.target.value})} className="col-span-3" />
               </div>
             </div>
           )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsOperationDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleSaveOperation}>Сохранить</Button>
+            <Button variant="outline" onClick={() => setIsOperationDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+            <Button onClick={handleSaveOperation} className="bg-accent text-accent-foreground hover:bg-accent/90">Сохранить</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isFuelTypeDialogOpen} onOpenChange={setIsFuelTypeDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl bg-card border-2 border-primary">
           <DialogHeader>
-            <DialogTitle>Редактировать вид топлива</DialogTitle>
+            <DialogTitle className="text-foreground">Редактировать вид топлива</DialogTitle>
           </DialogHeader>
           {editingFuelType && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="fuel-name" className="text-right">Название</Label>
-                <Input id="fuel-name" value={editingFuelType.name} onChange={(e) => setEditingFuelType({...editingFuelType, name: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-fuel-name" className="text-right text-foreground">Название</Label>
+                <Input id="edit-fuel-name" value={editingFuelType.name} onChange={(e) => setEditingFuelType({...editingFuelType, name: e.target.value})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="fuel-code" className="text-right">Код 1С</Label>
-                <Input id="fuel-code" value={editingFuelType.code_1c} onChange={(e) => setEditingFuelType({...editingFuelType, code_1c: e.target.value})} className="col-span-3" />
+                <Label htmlFor="edit-fuel-code" className="text-right text-foreground">Код 1С</Label>
+                <Input id="edit-fuel-code" value={editingFuelType.code_1c} onChange={(e) => setEditingFuelType({...editingFuelType, code_1c: e.target.value})} className="col-span-3" />
               </div>
             </div>
           )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsFuelTypeDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleSaveFuelType}>Сохранить</Button>
+            <Button variant="outline" onClick={() => setIsFuelTypeDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
+            <Button onClick={handleSaveFuelType} className="bg-accent text-accent-foreground hover:bg-accent/90">Сохранить</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={balanceChangeDialog.open} onOpenChange={(open) => setBalanceChangeDialog({...balanceChangeDialog, open})}>
-        <DialogContent>
+        <DialogContent className="bg-card border-2 border-primary">
           <DialogHeader>
-            <DialogTitle>Изменение баланса карты</DialogTitle>
+            <DialogTitle className="text-foreground">Изменение баланса карты</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-gray-600">Карта: <span className="font-mono font-medium">{balanceChangeDialog.cardCode}</span></p>
-            <p className="text-sm text-gray-600 mt-2">Старый баланс: <span className="font-mono font-medium">{balanceChangeDialog.oldBalance.toFixed(2)} л</span></p>
-            <p className="text-sm text-gray-600 mt-2">Новый баланс: <span className="font-mono font-medium">{balanceChangeDialog.newBalance.toFixed(2)} л</span></p>
-            <p className="text-sm text-gray-600 mt-2">Изменение: <span className={`font-mono font-medium ${balanceChangeDialog.newBalance >= balanceChangeDialog.oldBalance ? 'text-green-600' : 'text-red-600'}`}>
-              {balanceChangeDialog.newBalance >= balanceChangeDialog.oldBalance ? '+' : ''}{(balanceChangeDialog.newBalance - balanceChangeDialog.oldBalance).toFixed(2)} л
-            </span></p>
+            <p className="text-foreground mb-2">Карта: <span className="font-mono text-accent">{balanceChangeDialog.cardCode}</span></p>
+            <p className="text-foreground mb-2">Старый баланс: <span className="font-bold text-accent">{balanceChangeDialog.oldBalance.toFixed(2)} л</span></p>
+            <p className="text-foreground mb-2">Новый баланс: <span className="font-bold text-accent">{balanceChangeDialog.newBalance.toFixed(2)} л</span></p>
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => setBalanceChangeDialog({...balanceChangeDialog, open: false})}>Закрыть</Button>
+            <Button onClick={() => setBalanceChangeDialog({...balanceChangeDialog, open: false})} className="bg-accent text-accent-foreground hover:bg-accent/90">OK</Button>
           </div>
         </DialogContent>
       </Dialog>
