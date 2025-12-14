@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
+import { adminApi } from '@/utils/adminApi';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -18,23 +19,69 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const navigate = useNavigate();
   const [clients, setClients] = useState<any[]>([]);
+  const [stations, setStations] = useState<any[]>([]);
+  const [fuelTypes, setFuelTypes] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
+  const [operations, setOperations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadClients();
+    loadAllData();
   }, []);
+
+  const loadAllData = async () => {
+    await Promise.all([
+      loadClients(),
+      loadStations(),
+      loadFuelTypes(),
+      loadCards(),
+      loadOperations()
+    ]);
+    setLoading(false);
+  };
 
   const loadClients = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/5d6b9503-f733-4035-8881-786d1f28023b');
-      const data = await response.json();
-      if (data.clients) {
-        setClients(data.clients);
-      }
+      const data = await adminApi.clients.getAll();
+      setClients(data);
     } catch (error) {
       console.error('Error loading clients:', error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const loadStations = async () => {
+    try {
+      const data = await adminApi.stations.getAll();
+      setStations(data);
+    } catch (error) {
+      console.error('Error loading stations:', error);
+    }
+  };
+
+  const loadFuelTypes = async () => {
+    try {
+      const data = await adminApi.fuelTypes.getAll();
+      setFuelTypes(data);
+    } catch (error) {
+      console.error('Error loading fuel types:', error);
+    }
+  };
+
+  const loadCards = async () => {
+    try {
+      const data = await adminApi.cards.getAll();
+      setCards(data);
+    } catch (error) {
+      console.error('Error loading cards:', error);
+    }
+  };
+
+  const loadOperations = async () => {
+    try {
+      const data = await adminApi.operations.getAll();
+      setOperations(data);
+    } catch (error) {
+      console.error('Error loading operations:', error);
     }
   };
 
@@ -46,9 +93,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleDeleteClient = async (id: number) => {
     if (confirm('Удалить клиента?')) {
       try {
-        await fetch(`https://functions.poehali.dev/5d6b9503-f733-4035-8881-786d1f28023b?id=${id}`, {
-          method: 'DELETE'
-        });
+        await adminApi.clients.delete(id);
         loadClients();
       } catch (error) {
         console.error('Error deleting client:', error);
@@ -64,11 +109,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleSaveClient = async () => {
     if (editingClient) {
       try {
-        await fetch('https://functions.poehali.dev/5d6b9503-f733-4035-8881-786d1f28023b', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(editingClient)
-        });
+        await adminApi.clients.update(editingClient);
         loadClients();
         setIsClientDialogOpen(false);
         setEditingClient(null);
@@ -80,11 +121,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const handleCreateClient = async () => {
     try {
-      await fetch('https://functions.poehali.dev/5d6b9503-f733-4035-8881-786d1f28023b', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newClient)
-      });
+      await adminApi.clients.create(newClient);
       loadClients();
       setNewClient({inn: '', name: '', address: '', phone: '', email: '', login: '', password: '', admin: false});
       setIsAddClientDialogOpen(false);
@@ -93,19 +130,21 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
-  const [stations, setStations] = useState([
-    { id: 1, name: 'АЗС СОЮЗ №3', code_1c: '200001', address: 'г. Москва, ул. Ленина, д. 10' },
-    { id: 2, name: 'АЗС СОЮЗ №5', code_1c: '200002', address: 'г. Москва, пр-т Мира, д. 25' }
-  ]);
+
 
   const [editingStation, setEditingStation] = useState<any>(null);
   const [isStationDialogOpen, setIsStationDialogOpen] = useState(false);
   const [isAddStationDialogOpen, setIsAddStationDialogOpen] = useState(false);
   const [newStation, setNewStation] = useState({name: '', code_1c: '', address: ''});
 
-  const handleDeleteStation = (id: number) => {
+  const handleDeleteStation = async (id: number) => {
     if (confirm('Удалить АЗС?')) {
-      setStations(stations.filter(s => s.id !== id));
+      try {
+        await adminApi.stations.delete(id);
+        loadStations();
+      } catch (error) {
+        console.error('Error deleting station:', error);
+      }
     }
   };
 
@@ -114,19 +153,28 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsStationDialogOpen(true);
   };
 
-  const handleSaveStation = () => {
+  const handleSaveStation = async () => {
     if (editingStation) {
-      setStations(stations.map(s => s.id === editingStation.id ? editingStation : s));
-      setIsStationDialogOpen(false);
-      setEditingStation(null);
+      try {
+        await adminApi.stations.update(editingStation);
+        loadStations();
+        setIsStationDialogOpen(false);
+        setEditingStation(null);
+      } catch (error) {
+        console.error('Error updating station:', error);
+      }
     }
   };
 
-  const handleCreateStation = () => {
-    const newId = stations.length > 0 ? Math.max(...stations.map(s => s.id)) + 1 : 1;
-    setStations([...stations, { id: newId, ...newStation }]);
-    setNewStation({name: '', code_1c: '', address: ''});
-    setIsAddStationDialogOpen(false);
+  const handleCreateStation = async () => {
+    try {
+      await adminApi.stations.create(newStation);
+      loadStations();
+      setNewStation({name: '', code_1c: '', address: ''});
+      setIsAddStationDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating station:', error);
+    }
   };
 
   const handlePrintStations = () => {
@@ -145,9 +193,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [isAddFuelTypeDialogOpen, setIsAddFuelTypeDialogOpen] = useState(false);
   const [newFuelType, setNewFuelType] = useState({name: '', code_1c: ''});
 
-  const handleDeleteFuelType = (id: number) => {
+  const handleDeleteFuelType = async (id: number) => {
     if (confirm('Удалить вид топлива?')) {
-      setFuelTypes(fuelTypes.filter(f => f.id !== id));
+      try {
+        await adminApi.fuelTypes.delete(id);
+        loadFuelTypes();
+      } catch (error) {
+        console.error('Error deleting fuel type:', error);
+      }
     }
   };
 
@@ -156,31 +209,31 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsFuelTypeDialogOpen(true);
   };
 
-  const handleSaveFuelType = () => {
+  const handleSaveFuelType = async () => {
     if (editingFuelType) {
-      setFuelTypes(fuelTypes.map(f => f.id === editingFuelType.id ? editingFuelType : f));
-      setIsFuelTypeDialogOpen(false);
-      setEditingFuelType(null);
+      try {
+        await adminApi.fuelTypes.update(editingFuelType);
+        loadFuelTypes();
+        setIsFuelTypeDialogOpen(false);
+        setEditingFuelType(null);
+      } catch (error) {
+        console.error('Error updating fuel type:', error);
+      }
     }
   };
 
-  const handleCreateFuelType = () => {
-    const newId = fuelTypes.length > 0 ? Math.max(...fuelTypes.map(f => f.id)) + 1 : 1;
-    setFuelTypes([...fuelTypes, { id: newId, ...newFuelType }]);
-    setNewFuelType({name: '', code_1c: ''});
-    setIsAddFuelTypeDialogOpen(false);
+  const handleCreateFuelType = async () => {
+    try {
+      await adminApi.fuelTypes.create(newFuelType);
+      loadFuelTypes();
+      setNewFuelType({name: '', code_1c: ''});
+      setIsAddFuelTypeDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating fuel type:', error);
+    }
   };
 
-  const [cards, setCards] = useState([
-    {
-      id: 1,
-      client_name: 'ООО "Транспортная компания"',
-      fuel_type: 'АИ-95',
-      balance_liters: 955.00,
-      card_code: '0001',
-      pin_code: '****'
-    }
-  ]);
+
 
   const [editingCard, setEditingCard] = useState<any>(null);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
@@ -190,9 +243,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [filterCardClient, setFilterCardClient] = useState<string>('all');
   const [filterCardFuelType, setFilterCardFuelType] = useState<string>('all');
 
-  const handleDeleteCard = (id: number) => {
+  const handleDeleteCard = async (id: number) => {
     if (confirm('Удалить карту?')) {
-      setCards(cards.filter(c => c.id !== id));
+      try {
+        await adminApi.cards.delete(id);
+        loadCards();
+      } catch (error) {
+        console.error('Error deleting card:', error);
+      }
     }
   };
 
@@ -201,56 +259,63 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsCardDialogOpen(true);
   };
 
-  const handleSaveCard = () => {
+  const handleSaveCard = async () => {
     if (editingCard) {
-      setCards(cards.map(c => c.id === editingCard.id ? editingCard : c));
-      setIsCardDialogOpen(false);
-      setEditingCard(null);
+      try {
+        await adminApi.cards.update(editingCard);
+        loadCards();
+        setIsCardDialogOpen(false);
+        setEditingCard(null);
+      } catch (error) {
+        console.error('Error updating card:', error);
+      }
     }
   };
 
-  const handleCreateCard = () => {
-    const newId = cards.length > 0 ? Math.max(...cards.map(c => c.id)) + 1 : 1;
+  const handleCreateCard = async () => {
     const selectedClient = clients.find(c => c.id.toString() === newCard.client_id);
     const selectedFuelType = fuelTypes.find(f => f.id.toString() === newCard.fuel_type_id);
     
     if (!selectedClient || !selectedFuelType) return;
     
-    const cardToCreate = {
-      id: newId,
-      client_name: selectedClient.name,
-      fuel_type: selectedFuelType.name,
-      balance_liters: newCard.balance_liters,
-      card_code: newCard.card_code,
-      pin_code: newCard.pin_code
-    };
-    
-    setCards([...cards, cardToCreate]);
-    
-    // Если баланс не равен нулю, создаем операцию пополнения
-    if (newCard.balance_liters > 0) {
-      const now = new Date();
-      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const newOperationId = operations.length > 0 ? Math.max(...operations.map(op => op.id)) + 1 : 1;
+    try {
+      await adminApi.cards.create(newCard);
       
-      const initialOperation = {
-        id: newOperationId,
+      if (newCard.balance_liters > 0) {
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        
+        const initialOperation = {
+          card_code: newCard.card_code,
+          station_name: 'Склад',
+          operation_date: dateStr,
+          operation_type: 'пополнение',
+          quantity: newCard.balance_liters,
+          price: 0,
+          amount: 0,
+          comment: 'Первоначальное пополнение карты'
+        };
+        
+        await adminApi.operations.create(initialOperation);
+      }
+      
+      await loadCards();
+      await loadOperations();
+      
+      const cardToShow = {
+        client_name: selectedClient.name,
+        fuel_type: selectedFuelType.name,
+        balance_liters: newCard.balance_liters,
         card_code: newCard.card_code,
-        station_name: 'Склад',
-        operation_date: dateStr,
-        operation_type: 'пополнение',
-        quantity: newCard.balance_liters,
-        price: 0,
-        amount: 0,
-        comment: 'Первоначальное пополнение карты'
+        pin_code: newCard.pin_code
       };
       
-      setOperations([...operations, initialOperation]);
+      setNewCard({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: ''});
+      setIsAddCardDialogOpen(false);
+      setCardSuccessDialog({open: true, card: cardToShow});
+    } catch (error) {
+      console.error('Error creating card:', error);
     }
-    
-    setNewCard({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: ''});
-    setIsAddCardDialogOpen(false);
-    setCardSuccessDialog({open: true, card: cardToCreate});
   };
 
   const filteredCards = cards.filter(card => {
@@ -263,30 +328,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const uniqueClientNames = Array.from(new Set(cards.map(c => c.client_name).filter(name => nonAdminClientNames.includes(name))));
   const uniqueCardFuelTypes = Array.from(new Set(cards.map(c => c.fuel_type)));
 
-  const [operations, setOperations] = useState([
-    {
-      id: 1,
-      card_code: '0001',
-      station_name: 'АЗС СОЮЗ №5',
-      operation_date: '2024-12-10 14:30',
-      operation_type: 'пополнение',
-      quantity: 1000.00,
-      price: 52.50,
-      amount: 52500.00,
-      comment: 'Первоначальное пополнение'
-    },
-    {
-      id: 2,
-      card_code: '0001',
-      station_name: 'АЗС СОЮЗ №3',
-      operation_date: '2024-12-12 09:15',
-      operation_type: 'заправка',
-      quantity: 45.00,
-      price: 52.50,
-      amount: 2362.50,
-      comment: 'Заправка автомобиля А123БВ'
-    }
-  ]);
+
 
   const [editingOperation, setEditingOperation] = useState<any>(null);
   const [isOperationDialogOpen, setIsOperationDialogOpen] = useState(false);
@@ -297,9 +339,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [filterOperationType, setFilterOperationType] = useState<string>('all');
   const [balanceChangeDialog, setBalanceChangeDialog] = useState<{open: boolean, cardCode: string, oldBalance: number, newBalance: number}>({open: false, cardCode: '', oldBalance: 0, newBalance: 0});
 
-  const handleDeleteOperation = (id: number) => {
+  const handleDeleteOperation = async (id: number) => {
     if (confirm('Удалить операцию?')) {
-      setOperations(operations.filter(o => o.id !== id));
+      try {
+        await adminApi.operations.delete(id);
+        loadOperations();
+        loadCards();
+      } catch (error) {
+        console.error('Error deleting operation:', error);
+      }
     }
   };
 
@@ -321,62 +369,30 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       }, 0);
   };
 
-  const handleSaveOperation = () => {
+  const handleSaveOperation = async () => {
     if (editingOperation) {
-      const updatedOperations = operations.map(o => o.id === editingOperation.id ? editingOperation : o);
-      setOperations(updatedOperations);
-      
-      const cardCode = editingOperation.card_code;
-      const card = cards.find(c => c.card_code === cardCode);
-      
-      if (card) {
-        const oldBalance = card.balance_liters;
-        const newBalance = calculateCardBalance(cardCode, updatedOperations);
-        
-        setCards(cards.map(c => 
-          c.card_code === cardCode ? {...c, balance_liters: newBalance} : c
-        ));
-        
-        setBalanceChangeDialog({
-          open: true,
-          cardCode: cardCode,
-          oldBalance: oldBalance,
-          newBalance: newBalance
-        });
+      try {
+        await adminApi.operations.update(editingOperation);
+        await loadOperations();
+        await loadCards();
+        setIsOperationDialogOpen(false);
+        setEditingOperation(null);
+      } catch (error) {
+        console.error('Error updating operation:', error);
       }
-      
-      setIsOperationDialogOpen(false);
-      setEditingOperation(null);
     }
   };
 
-  const handleCreateOperation = () => {
-    const newId = operations.length > 0 ? Math.max(...operations.map(o => o.id)) + 1 : 1;
-    const newOp = { id: newId, ...newOperation };
-    const updatedOperations = [...operations, newOp];
-    setOperations(updatedOperations);
-    
-    const cardCode = newOperation.card_code;
-    const card = cards.find(c => c.card_code === cardCode);
-    
-    if (card) {
-      const oldBalance = card.balance_liters;
-      const newBalance = calculateCardBalance(cardCode, updatedOperations);
-      
-      setCards(cards.map(c => 
-        c.card_code === cardCode ? {...c, balance_liters: newBalance} : c
-      ));
-      
-      setBalanceChangeDialog({
-        open: true,
-        cardCode: cardCode,
-        oldBalance: oldBalance,
-        newBalance: newBalance
-      });
+  const handleCreateOperation = async () => {
+    try {
+      await adminApi.operations.create(newOperation);
+      await loadOperations();
+      await loadCards();
+      setNewOperation({card_code: '', station_name: '', operation_date: '', operation_type: 'пополнение', quantity: 0, price: 0, amount: 0, comment: ''});
+      setIsAddOperationDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating operation:', error);
     }
-    
-    setNewOperation({card_code: '', station_name: '', operation_date: '', operation_type: 'пополнение', quantity: 0, price: 0, amount: 0, comment: ''});
-    setIsAddOperationDialogOpen(false);
   };
 
   const filteredOperations = operations.filter(op => {

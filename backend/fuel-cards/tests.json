@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "Get all fuel cards",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "cards": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
