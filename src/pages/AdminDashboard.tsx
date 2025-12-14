@@ -24,6 +24,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [cards, setCards] = useState<any[]>([]);
   const [operations, setOperations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recalculateDialogOpen, setRecalculateDialogOpen] = useState(false);
+  const [recalculateCardId, setRecalculateCardId] = useState<number | null>(null);
+  const [recalculateResult, setRecalculateResult] = useState<{oldBalance: number, newBalance: number} | null>(null);
 
   useEffect(() => {
     loadAllData();
@@ -128,6 +131,51 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     } catch (error) {
       console.error('Error creating client:', error);
     }
+  };
+
+  const handleRecalculateBalance = (cardId: number) => {
+    setRecalculateCardId(cardId);
+    setRecalculateResult(null);
+    setRecalculateDialogOpen(true);
+  };
+
+  const confirmRecalculateBalance = async () => {
+    if (recalculateCardId === null) return;
+
+    const card = cards.find(c => c.id === recalculateCardId);
+    if (!card) return;
+
+    const cardOperations = operations
+      .filter(op => op.card_code === card.card_code)
+      .sort((a, b) => new Date(a.operation_date).getTime() - new Date(b.operation_date).getTime());
+
+    let calculatedBalance = 0;
+    cardOperations.forEach(op => {
+      if (op.operation_type === 'пополнение' || op.operation_type === 'оприходование') {
+        calculatedBalance += op.quantity;
+      } else if (op.operation_type === 'заправка' || op.operation_type === 'списание') {
+        calculatedBalance -= op.quantity;
+      }
+    });
+
+    const oldBalance = card.balance_liters;
+    setRecalculateResult({ oldBalance, newBalance: calculatedBalance });
+
+    try {
+      await adminApi.cards.update({
+        id: recalculateCardId,
+        balance_liters: calculatedBalance
+      });
+      await loadCards();
+    } catch (error) {
+      console.error('Error updating card balance:', error);
+    }
+  };
+
+  const closeRecalculateDialog = () => {
+    setRecalculateDialogOpen(false);
+    setRecalculateCardId(null);
+    setRecalculateResult(null);
   };
 
 
@@ -739,6 +787,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             </Button>
                             <Button size="sm" variant="destructive" onClick={() => handleDeleteCard(card.id)}>
                               <Icon name="Trash2" className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleRecalculateBalance(card.id)} className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground">
+                              <Icon name="RefreshCw" className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -1365,6 +1416,87 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               Отлично!
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={recalculateDialogOpen} onOpenChange={setRecalculateDialogOpen}>
+        <DialogContent className="max-w-md bg-card border-2 border-primary">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Icon name="RefreshCw" className="text-primary" />
+              Пересчёт баланса карты
+            </DialogTitle>
+          </DialogHeader>
+          
+          {recalculateResult ? (
+            <div className="space-y-4 py-4">
+              <div className="p-4 rounded-lg bg-accent/10 border-2 border-accent">
+                <div className="flex items-center gap-2 mb-3">
+                  <Icon name="CheckCircle2" size={24} className="text-accent" />
+                  <h3 className="font-bold text-foreground">Баланс обновлён!</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 rounded bg-card">
+                    <span className="text-muted-foreground">Баланс до:</span>
+                    <span className="font-bold text-lg text-destructive">{recalculateResult.oldBalance.toFixed(3)} л</span>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <Icon name="ArrowDown" size={24} className="text-primary" />
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-3 rounded bg-card border-2 border-accent">
+                    <span className="text-muted-foreground">Баланс после:</span>
+                    <span className="font-bold text-xl text-accent">{recalculateResult.newBalance.toFixed(3)} л</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-2 rounded bg-primary/10">
+                    <span className="text-sm text-muted-foreground">Разница:</span>
+                    <span className={`font-bold text-sm ${recalculateResult.newBalance - recalculateResult.oldBalance >= 0 ? 'text-accent' : 'text-destructive'}`}>
+                      {recalculateResult.newBalance - recalculateResult.oldBalance > 0 ? '+' : ''}
+                      {(recalculateResult.newBalance - recalculateResult.oldBalance).toFixed(3)} л
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button onClick={closeRecalculateDialog} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Icon name="X" size={16} className="mr-2" />
+                  Закрыть
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="p-4 rounded-lg bg-primary/10 border border-primary">
+                <div className="flex items-start gap-3">
+                  <Icon name="AlertCircle" size={24} className="text-primary flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <p className="font-semibold text-foreground">
+                      Вы уверены, что хотите пересчитать баланс?
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Система пересчитает баланс на основе всех операций по карте с самого начала. 
+                      Текущий баланс будет заменён на рассчитанный.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={closeRecalculateDialog} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                  <Icon name="X" size={16} className="mr-2" />
+                  Отмена
+                </Button>
+                <Button onClick={confirmRecalculateBalance} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Icon name="RefreshCw" size={16} className="mr-2" />
+                  Пересчитать
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
