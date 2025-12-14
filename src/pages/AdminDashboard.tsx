@@ -325,7 +325,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Клиенты</CardTitle>
-                  <div className="flex gap-2 no-print">
+                  <div className="flex gap-2">
                     <Button onClick={handlePrintClients} variant="outline" size="sm">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
@@ -390,7 +390,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead>Телефон</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Логин</TableHead>
-                      <TableHead className="no-print">Действия</TableHead>
+                      <TableHead>Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -402,7 +402,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell>{client.phone}</TableCell>
                         <TableCell>{client.email}</TableCell>
                         <TableCell className="font-mono">{client.login}</TableCell>
-                        <TableCell className="no-print">
+                        <TableCell>
                           <div className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleEditClient(client)}>
                               <Icon name="Pencil" className="w-4 h-4" />
@@ -425,7 +425,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Карты</CardTitle>
-                  <div className="flex gap-2 no-print">
+                  <div className="flex gap-2">
                     <Button onClick={handlePrintCards} variant="outline" size="sm">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
@@ -473,7 +473,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4 mb-4 no-print">
+                <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
                     <Label>Клиент</Label>
                     <Select value={filterCardClient} onValueChange={setFilterCardClient}>
@@ -511,7 +511,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead>Вид топлива</TableHead>
                       <TableHead>Баланс (л)</TableHead>
                       <TableHead>PIN-код</TableHead>
-                      <TableHead className="no-print">Действия</TableHead>
+                      <TableHead>Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -522,7 +522,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell><Badge variant="outline">{card.fuel_type}</Badge></TableCell>
                         <TableCell className="font-mono">{card.balance_liters.toFixed(2)}</TableCell>
                         <TableCell className="font-mono">{card.pin_code}</TableCell>
-                        <TableCell className="no-print">
+                        <TableCell>
                           <div className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleEditCard(card)}>
                               <Icon name="Pencil" className="w-4 h-4" />
@@ -545,7 +545,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Операции</CardTitle>
-                  <div className="flex gap-2 no-print">
+                  <div className="flex gap-2">
                     <Button onClick={handlePrintOperations} variant="outline" size="sm">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
@@ -615,7 +615,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4 mb-4 no-print">
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   <div>
                     <Label>Карта</Label>
                     <Select value={filterCard} onValueChange={setFilterCard}>
@@ -670,7 +670,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead>Цена (₽/л)</TableHead>
                       <TableHead>Сумма (₽)</TableHead>
                       <TableHead>Комментарий</TableHead>
-                      <TableHead className="no-print">Действия</TableHead>
+                      <TableHead>Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -688,7 +688,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="font-mono">{operation.price.toFixed(2)}</TableCell>
                         <TableCell className="font-mono">{operation.amount.toFixed(2)}</TableCell>
                         <TableCell>{operation.comment}</TableCell>
-                        <TableCell className="no-print">
+                        <TableCell>
                           <div className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleEditOperation(operation)}>
                               <Icon name="Pencil" className="w-4 h-4" />
@@ -711,7 +711,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Виды топлива</CardTitle>
-                  <div className="flex gap-2 no-print">
+                  <div className="flex gap-2">
                     <Button onClick={handlePrintFuelTypes} variant="outline" size="sm">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
@@ -752,7 +752,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <TableRow>
                       <TableHead>Название</TableHead>
                       <TableHead>Код 1С</TableHead>
-                      <TableHead className="no-print">Действия</TableHead>
+                      <TableHead>Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -760,7 +760,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableRow key={fuelType.id}>
                         <TableCell className="font-medium">{fuelType.name}</TableCell>
                         <TableCell className="font-mono">{fuelType.code_1c}</TableCell>
-                        <TableCell className="no-print">
+                        <TableCell>
                           <div className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleEditFuelType(fuelType)}>
                               <Icon name="Pencil" className="w-4 h-4" />
