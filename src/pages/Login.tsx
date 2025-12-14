@@ -55,7 +55,7 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex flex-col items-center px-8 pt-5">
       <div className="w-full max-w-4xl flex flex-col items-center">
-        <h1 className="md:text-6xl font-bold text-center text-accent drop-shadow-2xl tracking-tight text-4xl">
+        <h1 className="md:text-6xl font-bold text-center text-accent drop-shadow-2xl tracking-tight text-5xl">
           СЕТЬ АВТОЗАПРАВОЧНЫХ СТАНЦИЙ
         </h1>
         
