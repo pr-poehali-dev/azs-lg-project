@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,6 +16,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
+  const navigate = useNavigate();
   const [clients, setClients] = useState([
     {
       id: 1,
@@ -495,7 +497,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     {clients.map((client) => (
                       <TableRow key={client.id} className="border-b border-border">
                         <TableCell className="font-mono text-foreground">{client.inn}</TableCell>
-                        <TableCell className="font-medium text-foreground">{client.name}</TableCell>
+                        <TableCell 
+                          className="font-medium text-accent cursor-pointer hover:underline transition-all"
+                          onClick={() => navigate('/client')}
+                          title="Перейти в кабинет клиента"
+                        >
+                          {client.name}
+                        </TableCell>
                         <TableCell className="text-foreground">{client.address}</TableCell>
                         <TableCell className="text-foreground">{client.phone}</TableCell>
                         <TableCell className="text-foreground">{client.email}</TableCell>
