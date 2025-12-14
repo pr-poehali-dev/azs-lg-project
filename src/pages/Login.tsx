@@ -13,14 +13,41 @@ interface LoginProps {
 export default function Login({ onLogin }: LoginProps) {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login === 'admin' && password === 'admin123') {
-      navigate('/admin');
-    } else {
-      navigate('/client');
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/9f5ff2f8-a6c2-489f-8a85-40f260bbac9e', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ login, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        if (data.user.admin) {
+          navigate('/admin');
+        } else {
+          navigate('/client');
+        }
+      } else {
+        setError(data.error || 'Ошибка авторизации');
+      }
+    } catch (err) {
+      setError('Ошибка соединения с сервером');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,11 +98,17 @@ export default function Login({ onLogin }: LoginProps) {
                       required
                     />
                   </div>
+                  {error && (
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive text-destructive text-sm">
+                      {error}
+                    </div>
+                  )}
                   <Button 
                     type="submit" 
-                    className="w-full h-11 font-semibold bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg"
+                    disabled={loading}
+                    className="w-full h-11 font-semibold bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg disabled:opacity-50"
                   >
-                    Войти
+                    {loading ? 'Вход...' : 'Войти'}
                   </Button>
                 </form>
               </CardContent>
