@@ -352,7 +352,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         Добавить клиента
                       </Button>
                     </DialogTrigger>
-                  <DialogContent className="bg-card border-2 border-accent">
+                    <DialogContent className="bg-card border-2 border-accent">
                     <DialogHeader>
                       <DialogTitle className="text-foreground">Новый клиент</DialogTitle>
                     </DialogHeader>
@@ -391,6 +391,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
                   </DialogContent>
                 </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
