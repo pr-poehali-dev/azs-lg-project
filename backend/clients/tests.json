@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "name": "Get all clients",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "clients": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create new client",
+      "method": "POST",
+      "body": {
+        "inn": "1234567890",
+        "name": "Test Client",
+        "address": "Test Address",
+        "phone": "+79999999999",
+        "email": "test@test.ru",
+        "login": "testclient",
+        "password": "testpass",
+        "admin": false
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "client": {
+          "id": "number"
+        }
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

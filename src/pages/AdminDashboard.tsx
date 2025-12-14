@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,27 +17,42 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const navigate = useNavigate();
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      inn: '7707083893',
-      name: 'ООО "Транспортная компания"',
-      address: 'г. Москва, ул. Ленина, д. 1',
-      phone: '+79991234567',
-      email: 'info@transport.ru',
-      login: 'admin',
-      admin: false
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  const loadClients = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/5d6b9503-f733-4035-8881-786d1f28023b');
+      const data = await response.json();
+      if (data.clients) {
+        setClients(data.clients);
+      }
+    } catch (error) {
+      console.error('Error loading clients:', error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const [editingClient, setEditingClient] = useState<any>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [newClient, setNewClient] = useState({inn: '', name: '', address: '', phone: '', email: '', login: '', password: '', admin: false});
 
-  const handleDeleteClient = (id: number) => {
+  const handleDeleteClient = async (id: number) => {
     if (confirm('Удалить клиента?')) {
-      setClients(clients.filter(c => c.id !== id));
+      try {
+        await fetch(`https://functions.poehali.dev/5d6b9503-f733-4035-8881-786d1f28023b?id=${id}`, {
+          method: 'DELETE'
+        });
+        loadClients();
+      } catch (error) {
+        console.error('Error deleting client:', error);
+      }
     }
   };
 
@@ -46,19 +61,36 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setIsClientDialogOpen(true);
   };
 
-  const handleSaveClient = () => {
+  const handleSaveClient = async () => {
     if (editingClient) {
-      setClients(clients.map(c => c.id === editingClient.id ? editingClient : c));
-      setIsClientDialogOpen(false);
-      setEditingClient(null);
+      try {
+        await fetch('https://functions.poehali.dev/5d6b9503-f733-4035-8881-786d1f28023b', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editingClient)
+        });
+        loadClients();
+        setIsClientDialogOpen(false);
+        setEditingClient(null);
+      } catch (error) {
+        console.error('Error updating client:', error);
+      }
     }
   };
 
-  const handleCreateClient = () => {
-    const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1;
-    setClients([...clients, { id: newId, ...newClient }]);
-    setNewClient({inn: '', name: '', address: '', phone: '', email: '', login: '', password: '', admin: false});
-    setIsAddClientDialogOpen(false);
+  const handleCreateClient = async () => {
+    try {
+      await fetch('https://functions.poehali.dev/5d6b9503-f733-4035-8881-786d1f28023b', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newClient)
+      });
+      loadClients();
+      setNewClient({inn: '', name: '', address: '', phone: '', email: '', login: '', password: '', admin: false});
+      setIsAddClientDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating client:', error);
+    }
   };
 
   const [stations, setStations] = useState([
@@ -510,7 +542,20 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {clients.map((client) => (
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                          Загрузка...
+                        </TableCell>
+                      </TableRow>
+                    ) : clients.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                          Нет клиентов
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      clients.map((client) => (
                       <TableRow key={client.id} className="border-b border-border">
                         <TableCell className="font-mono text-foreground">{client.inn}</TableCell>
                         <TableCell 
@@ -543,7 +588,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
