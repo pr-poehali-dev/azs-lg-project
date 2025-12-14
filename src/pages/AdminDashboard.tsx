@@ -111,6 +111,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
   const [newCard, setNewCard] = useState({card_code: '', client_name: '', fuel_type: '', balance_liters: 0, pin_code: ''});
+  const [filterCardClient, setFilterCardClient] = useState<string>('all');
+  const [filterCardFuelType, setFilterCardFuelType] = useState<string>('all');
 
   const handleDeleteCard = (id: number) => {
     if (confirm('Удалить карту?')) {
@@ -137,6 +139,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setNewCard({card_code: '', client_name: '', fuel_type: '', balance_liters: 0, pin_code: ''});
     setIsAddCardDialogOpen(false);
   };
+
+  const filteredCards = cards.filter(card => {
+    if (filterCardClient !== 'all' && card.client_name !== filterCardClient) return false;
+    if (filterCardFuelType !== 'all' && card.fuel_type !== filterCardFuelType) return false;
+    return true;
+  });
+
+  const uniqueClientNames = Array.from(new Set(cards.map(c => c.client_name)));
+  const uniqueCardFuelTypes = Array.from(new Set(cards.map(c => c.fuel_type)));
 
   const [operations, setOperations] = useState([
     {
@@ -550,6 +561,36 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </Dialog>
               </CardHeader>
               <CardContent>
+                <div className="mb-4 grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-foreground mb-2">Клиент</Label>
+                    <Select value={filterCardClient} onValueChange={setFilterCardClient}>
+                      <SelectTrigger className="bg-input text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все</SelectItem>
+                        {uniqueClientNames.map(client => (
+                          <SelectItem key={client} value={client}>{client}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-foreground mb-2">Вид топлива</Label>
+                    <Select value={filterCardFuelType} onValueChange={setFilterCardFuelType}>
+                      <SelectTrigger className="bg-input text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все</SelectItem>
+                        {uniqueCardFuelTypes.map(fuel => (
+                          <SelectItem key={fuel} value={fuel}>{fuel}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -563,7 +604,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {cards.map((card) => (
+                      {filteredCards.map((card) => (
                         <TableRow key={card.id} className="border-b border-border">
                           <TableCell className="py-2 px-3 font-mono text-accent font-bold">{card.card_code}</TableCell>
                           <TableCell className="py-2 px-3 text-foreground">{card.client_name}</TableCell>
