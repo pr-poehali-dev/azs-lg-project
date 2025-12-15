@@ -40,6 +40,9 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          <div className="footer-copyright">
+            ЦКТ "СпецСистемы" © 2025
+          </div>
         </OperationsProvider>
       </TooltipProvider>
     </QueryClientProvider>
