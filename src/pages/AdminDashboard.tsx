@@ -138,6 +138,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setIsAddClientDialogOpen(false);
     } catch (error) {
       console.error('Error creating client:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      if (errorMessage.includes('unique constraint')) {
+        alert('Ошибка: Клиент с таким логином уже существует. Пожалуйста, выберите другой логин.');
+      } else {
+        alert(`Ошибка при создании клиента: ${errorMessage}`);
+      }
     }
   };
 
