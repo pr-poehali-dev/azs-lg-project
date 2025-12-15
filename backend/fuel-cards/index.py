@@ -53,7 +53,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     fc.client_id,
                     fc.fuel_type_id,
                     fc.status,
-                    fc.block_reason
+                    fc.block_reason,
+                    fc.daily_limit
                 FROM fuel_cards fc
                 LEFT JOIN clients c ON fc.client_id = c.id
                 LEFT JOIN fuel_types ft ON fc.fuel_type_id = ft.id
@@ -73,7 +74,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'client_id': row[6],
                     'fuel_type_id': row[7],
                     'status': row[8] if row[8] else 'активна',
-                    'block_reason': row[9] if row[9] else ''
+                    'block_reason': row[9] if row[9] else '',
+                    'daily_limit': float(row[10]) if row[10] else 0.0
                 })
             
             cursor.close()
@@ -93,9 +95,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             
             cursor.execute("""
-                INSERT INTO fuel_cards (card_code, client_id, fuel_type_id, balance_liters, pin_code, status, block_reason)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                RETURNING id, card_code, client_id, fuel_type_id, balance_liters, pin_code, status, block_reason
+                INSERT INTO fuel_cards (card_code, client_id, fuel_type_id, balance_liters, pin_code, status, block_reason, daily_limit)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, card_code, client_id, fuel_type_id, balance_liters, pin_code, status, block_reason, daily_limit
             """, (
                 body_data.get('card_code'),
                 body_data.get('client_id'),
@@ -103,7 +105,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 body_data.get('balance_liters', 0),
                 body_data.get('pin_code'),
                 body_data.get('status', 'активна'),
-                body_data.get('block_reason', '')
+                body_data.get('block_reason', ''),
+                body_data.get('daily_limit', 0)
             ))
             
             row = cursor.fetchone()
@@ -128,6 +131,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'pin_code': row[5],
                 'status': row[6] if row[6] else 'активна',
                 'block_reason': row[7] if row[7] else '',
+                'daily_limit': float(row[8]) if row[8] else 0.0,
                 'client_name': names[0] if names else '',
                 'fuel_type': names[1] if names else ''
             }
@@ -171,6 +175,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if 'block_reason' in body_data:
                 update_fields.append('block_reason = %s')
                 update_values.append(body_data['block_reason'])
+            if 'daily_limit' in body_data:
+                update_fields.append('daily_limit = %s')
+                update_values.append(body_data['daily_limit'])
             
             if not update_fields:
                 cursor.close()
@@ -190,7 +197,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 UPDATE fuel_cards
                 SET {', '.join(update_fields)}
                 WHERE id = %s
-                RETURNING id, card_code, client_id, fuel_type_id, balance_liters, pin_code, status, block_reason
+                RETURNING id, card_code, client_id, fuel_type_id, balance_liters, pin_code, status, block_reason, daily_limit
             """
             
             cursor.execute(update_query, tuple(update_values))
@@ -218,6 +225,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'pin_code': row[5],
                     'status': row[6] if row[6] else 'активна',
                     'block_reason': row[7] if row[7] else '',
+                    'daily_limit': float(row[8]) if row[8] else 0.0,
                     'client_name': names[0] if names else '',
                     'fuel_type': names[1] if names else ''
                 }

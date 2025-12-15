@@ -8,7 +8,9 @@
       "expectedBody": {
         "card_code": "string",
         "fuel_type": "string",
-        "balance_liters": "number"
+        "balance_liters": "number",
+        "available_balance": "number",
+        "daily_limit": "number"
       },
       "bodyMatcher": "partial"
     },

@@ -423,7 +423,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [editingCard, setEditingCard] = useState<any>(null);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
-  const [newCard, setNewCard] = useState({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: '', status: 'активна', block_reason: ''});
+  const [newCard, setNewCard] = useState({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: '', status: 'активна', block_reason: '', daily_limit: 0});
   const [cardSuccessDialog, setCardSuccessDialog] = useState<{open: boolean, card: any}>({open: false, card: null});
   const [filterCardClient, setFilterCardClient] = useState<string>('all');
   const [filterCardFuelType, setFilterCardFuelType] = useState<string>('all');
@@ -494,7 +494,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         pin_code: newCard.pin_code
       };
       
-      setNewCard({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: '', status: 'активна', block_reason: ''});
+      setNewCard({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: '', status: 'активна', block_reason: '', daily_limit: 0});
       setIsAddCardDialogOpen(false);
       setCardSuccessDialog({open: true, card: cardToShow});
     } catch (error) {
@@ -923,6 +923,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-card-pin" className="text-right text-foreground">PIN-код</Label>
                             <Input id="new-card-pin" type="password" value={newCard.pin_code} onChange={(e) => setNewCard({...newCard, pin_code: e.target.value})} className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="new-card-daily-limit" className="text-right text-foreground">Дневной лимит (л)</Label>
+                            <Input id="new-card-daily-limit" type="number" step="0.001" placeholder="0 = без лимита" value={newCard.daily_limit} onChange={(e) => setNewCard({...newCard, daily_limit: parseFloat(e.target.value) || 0})} className="col-span-3" />
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
@@ -1461,6 +1465,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-card-pin" className="text-right text-foreground">PIN-код</Label>
                 <Input id="edit-card-pin" type="password" value={editingCard.pin_code} onChange={(e) => setEditingCard({...editingCard, pin_code: e.target.value})} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-card-daily-limit" className="text-right text-foreground">Дневной лимит (л)</Label>
+                <Input id="edit-card-daily-limit" type="number" step="0.001" placeholder="0 = без лимита" value={editingCard.daily_limit || 0} onChange={(e) => setEditingCard({...editingCard, daily_limit: parseFloat(e.target.value) || 0})} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-card-status" className="text-right text-foreground">Статус</Label>
