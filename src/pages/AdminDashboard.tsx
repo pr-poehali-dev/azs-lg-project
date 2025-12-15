@@ -35,6 +35,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [topupAmount, setTopupAmount] = useState('');
   const [topupComment, setTopupComment] = useState('');
   const [topupSuccessDialog, setTopupSuccessDialog] = useState<{open: boolean, card: any, quantity: number}>({open: false, card: null, quantity: 0});
+  const [blockCardDialogOpen, setBlockCardDialogOpen] = useState(false);
+  const [unblockCardDialogOpen, setUnblockCardDialogOpen] = useState(false);
+  const [blockCardId, setBlockCardId] = useState<number | null>(null);
+  const [blockCardReason, setBlockCardReason] = useState('');
 
   useEffect(() => {
     loadAllData();
@@ -162,6 +166,52 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setTopupAmount('');
     setTopupComment('');
     setTopupDialogOpen(true);
+  };
+
+  const handleBlockCard = (cardId: number) => {
+    setBlockCardId(cardId);
+    setBlockCardReason('');
+    setBlockCardDialogOpen(true);
+  };
+
+  const handleUnblockCard = (cardId: number) => {
+    setBlockCardId(cardId);
+    setUnblockCardDialogOpen(true);
+  };
+
+  const confirmBlockCard = async () => {
+    if (blockCardId !== null) {
+      try {
+        await adminApi.cards.update({
+          id: blockCardId,
+          status: 'заблокирована',
+          block_reason: blockCardReason
+        });
+        await loadCards();
+        setBlockCardDialogOpen(false);
+        setBlockCardId(null);
+        setBlockCardReason('');
+      } catch (error) {
+        console.error('Error blocking card:', error);
+      }
+    }
+  };
+
+  const confirmUnblockCard = async () => {
+    if (blockCardId !== null) {
+      try {
+        await adminApi.cards.update({
+          id: blockCardId,
+          status: 'активна',
+          block_reason: ''
+        });
+        await loadCards();
+        setUnblockCardDialogOpen(false);
+        setBlockCardId(null);
+      } catch (error) {
+        console.error('Error unblocking card:', error);
+      }
+    }
   };
 
   const handleTopupQuantityChange = (value: string) => {
@@ -947,17 +997,26 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="font-mono text-muted-foreground">{card.pin_code}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleTopupCard(card.id)} className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground">
+                            <Button size="sm" variant="outline" onClick={() => handleTopupCard(card.id)} className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground" title="Пополнить">
                               <Icon name="Plus" className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleEditCard(card)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                            {card.status === 'активна' ? (
+                              <Button size="sm" variant="outline" onClick={() => handleBlockCard(card.id)} className="border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground" title="Заблокировать">
+                                <Icon name="Lock" className="w-4 h-4" />
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" onClick={() => handleUnblockCard(card.id)} className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground" title="Разблокировать">
+                                <Icon name="Unlock" className="w-4 h-4" />
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" onClick={() => handleEditCard(card)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground" title="Редактировать">
                               <Icon name="Pencil" className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleDeleteCard(card.id)}>
-                              <Icon name="Trash2" className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleRecalculateBalance(card.id)} className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground">
+                            <Button size="sm" variant="outline" onClick={() => handleRecalculateBalance(card.id)} className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground" title="Пересчитать баланс">
                               <Icon name="RefreshCw" className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteCard(card.id)} title="Удалить">
+                              <Icon name="Trash2" className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -1875,6 +1934,125 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Button onClick={confirmRecalculateBalance} className="bg-primary text-primary-foreground hover:bg-primary/90">
                   <Icon name="RefreshCw" size={16} className="mr-2" />
                   Пересчитать
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={blockCardDialogOpen} onOpenChange={setBlockCardDialogOpen}>
+        <DialogContent className="max-w-md bg-card border-2 border-primary">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Icon name="Lock" className="text-destructive" />
+              Блокировка карты
+            </DialogTitle>
+          </DialogHeader>
+          
+          {cards.find(c => c.id === blockCardId) && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 rounded-lg bg-destructive/10 border-2 border-destructive">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Номер карты:</span>
+                    <span className="font-mono text-xl font-bold text-accent">{cards.find(c => c.id === blockCardId)?.card_code}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Клиент:</span>
+                    <span className="font-semibold text-foreground">{cards.find(c => c.id === blockCardId)?.client_name}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="block-reason" className="text-foreground">Причина блокировки</Label>
+                <Input
+                  id="block-reason"
+                  placeholder="Укажите причину блокировки"
+                  value={blockCardReason}
+                  onChange={(e) => setBlockCardReason(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setBlockCardDialogOpen(false)}
+                  className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Icon name="X" size={16} className="mr-2" />
+                  Отмена
+                </Button>
+                <Button 
+                  onClick={confirmBlockCard}
+                  disabled={!blockCardReason}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  <Icon name="Lock" size={16} className="mr-2" />
+                  Заблокировать
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={unblockCardDialogOpen} onOpenChange={setUnblockCardDialogOpen}>
+        <DialogContent className="max-w-md bg-card border-2 border-primary">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Icon name="Unlock" className="text-primary" />
+              Разблокировка карты
+            </DialogTitle>
+          </DialogHeader>
+          
+          {cards.find(c => c.id === blockCardId) && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Номер карты:</span>
+                    <span className="font-mono text-xl font-bold text-accent">{cards.find(c => c.id === blockCardId)?.card_code}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Клиент:</span>
+                    <span className="font-semibold text-foreground">{cards.find(c => c.id === blockCardId)?.client_name}</span>
+                  </div>
+                  {cards.find(c => c.id === blockCardId)?.block_reason && (
+                    <div className="pt-2 border-t border-border">
+                      <span className="text-sm text-muted-foreground">Причина блокировки:</span>
+                      <p className="text-sm font-medium text-foreground mt-1">{cards.find(c => c.id === blockCardId)?.block_reason}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary">
+                <div className="flex items-start gap-2">
+                  <Icon name="AlertCircle" size={20} className="text-primary mt-0.5" />
+                  <p className="text-sm text-foreground">
+                    Вы уверены, что хотите разблокировать эту карту?
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setUnblockCardDialogOpen(false)}
+                  className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Icon name="X" size={16} className="mr-2" />
+                  Отмена
+                </Button>
+                <Button 
+                  onClick={confirmUnblockCard}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Icon name="Unlock" size={16} className="mr-2" />
+                  Разблокировать
                 </Button>
               </div>
             </div>
