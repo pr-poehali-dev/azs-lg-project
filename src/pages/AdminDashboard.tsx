@@ -976,6 +976,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead className="text-foreground font-bold">Клиент</TableHead>
                       <TableHead className="text-foreground font-bold">Вид топлива</TableHead>
                       <TableHead className="text-foreground font-bold">Баланс (л)</TableHead>
+                      <TableHead className="text-foreground font-bold">Дневной лимит (л)</TableHead>
                       <TableHead className="text-foreground font-bold">Статус</TableHead>
                       <TableHead className="text-foreground font-bold">PIN-код</TableHead>
                       <TableHead className="text-foreground font-bold">Действия</TableHead>
@@ -988,6 +989,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="text-foreground">{card.client_name}</TableCell>
                         <TableCell className="text-foreground">{card.fuel_type}</TableCell>
                         <TableCell className="font-bold text-accent">{card.balance_liters.toFixed(3)}</TableCell>
+                        <TableCell className="text-foreground">
+                          {card.daily_limit > 0 ? card.daily_limit.toFixed(3) : <span className="text-muted-foreground">без лимита</span>}
+                        </TableCell>
                         <TableCell>
                           <Badge className={card.status === 'активна' ? 'bg-primary text-primary-foreground' : 'bg-destructive text-destructive-foreground'}>
                             {card.status || 'активна'}
