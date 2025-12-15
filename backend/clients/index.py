@@ -81,17 +81,29 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             print(f"Creating client with data: {json.dumps(body_data, ensure_ascii=False)}")
             
+            email = body_data.get('email', '').strip() or None
+            phone = body_data.get('phone', '').strip() or None
+            login = body_data.get('login', '').strip()
+            
+            print(f"Normalized values - email: {email}, phone: {phone}, login: {login}")
+            
             cursor.execute("""
-                SELECT COUNT(*) FROM clients WHERE login = %s OR email = %s OR phone = %s
-            """, (body_data.get('login'), body_data.get('email'), body_data.get('phone')))
+                SELECT COUNT(*) FROM clients 
+                WHERE login = %s 
+                   OR (email IS NOT NULL AND email = %s) 
+                   OR (phone IS NOT NULL AND phone = %s)
+            """, (login, email, phone))
             
             conflict_count = cursor.fetchone()[0]
             print(f"Conflicts found: {conflict_count}")
             
             if conflict_count > 0:
                 cursor.execute("""
-                    SELECT login, email, phone FROM clients WHERE login = %s OR email = %s OR phone = %s
-                """, (body_data.get('login'), body_data.get('email'), body_data.get('phone')))
+                    SELECT login, email, phone FROM clients 
+                    WHERE login = %s 
+                       OR (email IS NOT NULL AND email = %s) 
+                       OR (phone IS NOT NULL AND phone = %s)
+                """, (login, email, phone))
                 conflicts = cursor.fetchall()
                 print(f"Conflicting records: {conflicts}")
             
@@ -100,12 +112,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id, inn, name, address, phone, email, login, admin
             """, (
-                body_data.get('inn'),
-                body_data.get('name'),
-                body_data.get('address'),
-                body_data.get('phone'),
-                body_data.get('email'),
-                body_data.get('login'),
+                body_data.get('inn', '').strip() or None,
+                body_data.get('name', '').strip(),
+                body_data.get('address', '').strip() or None,
+                phone,
+                email,
+                login,
                 body_data.get('password'),
                 body_data.get('admin', False)
             ))
