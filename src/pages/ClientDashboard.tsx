@@ -310,6 +310,7 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
               <Button 
                 onClick={() => {
                   sessionStorage.removeItem('fromAdmin');
+                  sessionStorage.removeItem('viewClientLogin');
                   navigate('/admin');
                 }} 
                 variant="outline" 

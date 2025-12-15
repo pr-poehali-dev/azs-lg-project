@@ -623,6 +623,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           className="font-medium text-accent cursor-pointer hover:underline transition-all"
                           onClick={() => {
                             sessionStorage.setItem('fromAdmin', 'true');
+                            sessionStorage.setItem('viewClientLogin', client.login);
                             navigate(client.admin ? '/admin' : '/client');
                           }}
                           title={client.admin ? "Перейти в админпанель" : "Перейти в кабинет клиента"}
