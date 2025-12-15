@@ -100,6 +100,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [newClient, setNewClient] = useState({inn: '', name: '', address: '', phone: '', email: '', login: '', password: '', admin: false});
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const handleDeleteClient = async (id: number) => {
     if (confirm('Удалить клиента?')) {
@@ -639,8 +640,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-inn" className="text-right text-foreground">ИНН</Label>
-                            <Input id="new-inn" value={newClient.inn} onChange={(e) => setNewClient({...newClient, inn: e.target.value})} className="col-span-3" />
+                            <Label htmlFor="new-inn" className="text-right text-foreground">
+                              ИНН <span className="text-destructive">*</span>
+                            </Label>
+                            <Input id="new-inn" value={newClient.inn} onChange={(e) => setNewClient({...newClient, inn: e.target.value})} className="col-span-3" required />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-name" className="text-right text-foreground">Название</Label>
@@ -651,12 +654,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             <Input id="new-address" value={newClient.address} onChange={(e) => setNewClient({...newClient, address: e.target.value})} className="col-span-3" />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-phone" className="text-right text-foreground">Телефон</Label>
-                            <Input id="new-phone" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} className="col-span-3" />
+                            <Label htmlFor="new-phone" className="text-right text-foreground">
+                              Телефон <span className="text-destructive">*</span>
+                            </Label>
+                            <Input id="new-phone" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} className="col-span-3" required />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-email" className="text-right text-foreground">Email</Label>
-                            <Input id="new-email" type="email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} className="col-span-3" />
+                            <Label htmlFor="new-email" className="text-right text-foreground">
+                              Email <span className="text-destructive">*</span>
+                            </Label>
+                            <Input id="new-email" type="email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} className="col-span-3" required />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-login" className="text-right text-foreground">Логин</Label>
@@ -664,7 +671,24 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-password" className="text-right text-foreground">Пароль</Label>
-                            <Input id="new-password" type="password" value={newClient.password} onChange={(e) => setNewClient({...newClient, password: e.target.value})} className="col-span-3" />
+                            <div className="col-span-3 relative">
+                              <Input 
+                                id="new-password" 
+                                type={showNewPassword ? "text" : "password"} 
+                                value={newClient.password} 
+                                onChange={(e) => setNewClient({...newClient, password: e.target.value})} 
+                                className="pr-10"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                              >
+                                <Icon name={showNewPassword ? "EyeOff" : "Eye"} className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                            </div>
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="new-admin" className="text-right text-foreground">Это админ</Label>
@@ -682,7 +706,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </div>
                         <div className="flex justify-end gap-2">
                           <Button variant="outline" onClick={() => setIsAddClientDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
-                          <Button onClick={handleCreateClient} className="bg-accent text-accent-foreground hover:bg-accent/90">Создать</Button>
+                          <Button 
+                            onClick={handleCreateClient} 
+                            disabled={!newClient.inn || !newClient.phone || !newClient.email || !newClient.name || !newClient.login || !newClient.password}
+                            className="bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Создать
+                          </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
