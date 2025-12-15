@@ -79,7 +79,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'POST':
             body_data = json.loads(event.get('body', '{}'))
             
-            print(f"Creating client: {body_data.get('login')}")
+            print(f"Creating client with data: {json.dumps(body_data, ensure_ascii=False)}")
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM clients WHERE login = %s OR email = %s OR phone = %s
+            """, (body_data.get('login'), body_data.get('email'), body_data.get('phone')))
+            
+            conflict_count = cursor.fetchone()[0]
+            print(f"Conflicts found: {conflict_count}")
+            
+            if conflict_count > 0:
+                cursor.execute("""
+                    SELECT login, email, phone FROM clients WHERE login = %s OR email = %s OR phone = %s
+                """, (body_data.get('login'), body_data.get('email'), body_data.get('phone')))
+                conflicts = cursor.fetchall()
+                print(f"Conflicting records: {conflicts}")
             
             cursor.execute("""
                 INSERT INTO clients (inn, name, address, phone, email, login, password, admin)
