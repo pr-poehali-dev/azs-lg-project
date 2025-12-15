@@ -28,6 +28,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [recalculateDialogOpen, setRecalculateDialogOpen] = useState(false);
   const [recalculateCardId, setRecalculateCardId] = useState<number | null>(null);
   const [recalculateResult, setRecalculateResult] = useState<{oldBalance: number, newBalance: number} | null>(null);
+  const [topupDialogOpen, setTopupDialogOpen] = useState(false);
+  const [topupCardId, setTopupCardId] = useState<number | null>(null);
+  const [topupQuantity, setTopupQuantity] = useState('');
+  const [topupPrice, setTopupPrice] = useState('');
+  const [topupAmount, setTopupAmount] = useState('');
+  const [topupComment, setTopupComment] = useState('');
+  const [topupSuccessDialog, setTopupSuccessDialog] = useState<{open: boolean, card: any, quantity: number}>({open: false, card: null, quantity: 0});
 
   useEffect(() => {
     loadAllData();
@@ -138,6 +145,84 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setRecalculateCardId(cardId);
     setRecalculateResult(null);
     setRecalculateDialogOpen(true);
+  };
+
+  const handleTopupCard = (cardId: number) => {
+    setTopupCardId(cardId);
+    setTopupQuantity('');
+    setTopupPrice('');
+    setTopupAmount('');
+    setTopupComment('');
+    setTopupDialogOpen(true);
+  };
+
+  const handleTopupQuantityChange = (value: string) => {
+    setTopupQuantity(value);
+    if (value && topupPrice) {
+      const amount = (parseFloat(value) * parseFloat(topupPrice)).toFixed(2);
+      setTopupAmount(amount);
+    }
+  };
+
+  const handleTopupPriceChange = (value: string) => {
+    setTopupPrice(value);
+    if (value && topupQuantity) {
+      const amount = (parseFloat(topupQuantity) * parseFloat(value)).toFixed(2);
+      setTopupAmount(amount);
+    }
+  };
+
+  const handleTopupAmountChange = (value: string) => {
+    setTopupAmount(value);
+    if (value && topupQuantity) {
+      const price = (parseFloat(value) / parseFloat(topupQuantity)).toFixed(2);
+      setTopupPrice(price);
+    }
+  };
+
+  const confirmTopup = async () => {
+    if (topupCardId === null || !topupQuantity || !topupPrice || !topupAmount) return;
+
+    const card = cards.find(c => c.id === topupCardId);
+    if (!card) return;
+
+    try {
+      const dateStr = formatDateForInput();
+      
+      const topupOperation = {
+        card_code: card.card_code,
+        station_name: 'Склад',
+        operation_date: dateStr,
+        operation_type: 'пополнение',
+        quantity: parseFloat(topupQuantity),
+        price: parseFloat(topupPrice),
+        amount: parseFloat(topupAmount),
+        comment: topupComment || 'Пополнение баланса'
+      };
+      
+      await adminApi.operations.create(topupOperation);
+      
+      const newBalance = card.balance_liters + parseFloat(topupQuantity);
+      await adminApi.cards.update({
+        id: topupCardId,
+        balance_liters: newBalance
+      });
+      
+      await loadCards();
+      await loadOperations();
+      
+      setTopupDialogOpen(false);
+      setTopupSuccessDialog({
+        open: true,
+        card: {
+          ...card,
+          balance_liters: newBalance
+        },
+        quantity: parseFloat(topupQuantity)
+      });
+    } catch (error) {
+      console.error('Error topping up card:', error);
+    }
   };
 
   const confirmRecalculateBalance = async () => {
@@ -787,6 +872,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="font-mono text-muted-foreground">{card.pin_code}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleTopupCard(card.id)} className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground">
+                              <Icon name="Plus" className="w-4 h-4" />
+                            </Button>
                             <Button size="sm" variant="outline" onClick={() => handleEditCard(card)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                               <Icon name="Pencil" className="w-4 h-4" />
                             </Button>
@@ -1435,6 +1523,184 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           )}
           <div className="flex justify-end">
             <Button onClick={() => setCardSuccessDialog({open: false, card: null})} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Icon name="CheckCircle2" size={16} className="mr-2" />
+              Отлично!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={topupDialogOpen} onOpenChange={setTopupDialogOpen}>
+        <DialogContent className="max-w-md bg-card border-2 border-primary">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Icon name="Plus" className="text-primary" />
+              Пополнение баланса карты
+            </DialogTitle>
+          </DialogHeader>
+          
+          {cards.find(c => c.id === topupCardId) && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 rounded-lg bg-accent/10 border-2 border-accent">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Клиент:</span>
+                    <span className="font-semibold text-foreground">{cards.find(c => c.id === topupCardId)?.client_name}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Номер карты:</span>
+                    <span className="font-mono text-xl font-bold text-accent">{cards.find(c => c.id === topupCardId)?.card_code}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Вид топлива:</span>
+                    <span className="font-semibold text-foreground">{cards.find(c => c.id === topupCardId)?.fuel_type}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Текущий баланс:</span>
+                    <span className="font-bold text-primary text-lg">{cards.find(c => c.id === topupCardId)?.balance_liters.toFixed(3)} л</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="topup-quantity" className="text-foreground">Количество (литров)</Label>
+                  <Input
+                    id="topup-quantity"
+                    type="number"
+                    step="0.001"
+                    min="0.001"
+                    placeholder="Введите количество"
+                    value={topupQuantity}
+                    onChange={(e) => handleTopupQuantityChange(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="topup-price" className="text-foreground">Цена (руб/л)</Label>
+                  <Input
+                    id="topup-price"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="Введите цену"
+                    value={topupPrice}
+                    onChange={(e) => handleTopupPriceChange(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="topup-amount" className="text-foreground">Сумма (руб)</Label>
+                  <Input
+                    id="topup-amount"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="Введите сумму"
+                    value={topupAmount}
+                    onChange={(e) => handleTopupAmountChange(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="topup-comment" className="text-foreground">Комментарий</Label>
+                  <Input
+                    id="topup-comment"
+                    placeholder="Комментарий к операции"
+                    value={topupComment}
+                    onChange={(e) => setTopupComment(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setTopupDialogOpen(false)}
+                  className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Icon name="X" size={16} className="mr-2" />
+                  Отмена
+                </Button>
+                <Button 
+                  onClick={confirmTopup}
+                  disabled={!topupQuantity || !topupPrice || !topupAmount}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Icon name="Plus" size={16} className="mr-2" />
+                  Пополнить
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={topupSuccessDialog.open} onOpenChange={(open) => setTopupSuccessDialog({...topupSuccessDialog, open})}>
+        <DialogContent className="max-w-lg bg-card border-2 border-primary">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <Icon name="CheckCircle2" size={28} className="text-primary" />
+              </div>
+              <DialogTitle className="text-2xl text-foreground">Карта успешно пополнена!</DialogTitle>
+            </div>
+          </DialogHeader>
+          
+          {topupSuccessDialog.card && (
+            <div className="py-4 space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="flex-1 space-y-3">
+                  <div className="p-4 rounded-lg bg-primary/10 border-2 border-primary">
+                    <h3 className="text-lg font-bold text-primary mb-3">Детали пополнения:</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Номер карты:</span>
+                        <span className="font-mono text-lg font-bold text-accent">{topupSuccessDialog.card.card_code}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Клиент:</span>
+                        <span className="font-semibold text-foreground">{topupSuccessDialog.card.client_name}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Пополнено:</span>
+                        <span className="font-bold text-primary text-xl">+{topupSuccessDialog.quantity.toFixed(3)} л</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t-2 border-primary/30">
+                        <span className="text-muted-foreground">Новый баланс:</span>
+                        <span className="font-bold text-accent text-2xl">{topupSuccessDialog.card.balance_liters.toFixed(3)} л</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 rounded-lg bg-accent/10 border border-accent">
+                    <div className="flex items-start gap-2">
+                      <Icon name="Info" size={20} className="text-accent mt-0.5" />
+                      <p className="text-sm text-foreground">
+                        Операция пополнения автоматически добавлена в историю операций карты
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex-shrink-0">
+                  <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Icon name="SmilePlus" size={80} className="text-primary" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-end">
+            <Button 
+              onClick={() => setTopupSuccessDialog({open: false, card: null, quantity: 0})} 
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <Icon name="CheckCircle2" size={16} className="mr-2" />
               Отлично!
             </Button>
