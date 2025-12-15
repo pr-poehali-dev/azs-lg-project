@@ -623,7 +623,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <Icon name="Users" className="text-accent" />
                     Клиенты
                   </CardTitle>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
+                    <Select value={filterClientType} onValueChange={setFilterClientType}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Все типы" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все типы</SelectItem>
+                        <SelectItem value="client">Клиенты</SelectItem>
+                        <SelectItem value="admin">Администраторы</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button onClick={handlePrintClients} variant="outline" size="sm" className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
                       <Icon name="Printer" className="w-4 h-4 mr-2" />
                       Печать
@@ -721,30 +731,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="mb-4">
-                  <Label className="text-foreground">Тип клиента</Label>
-                  <Select value={filterClientType} onValueChange={setFilterClientType}>
-                    <SelectTrigger className="max-w-xs">
-                      <SelectValue placeholder="Все типы" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Все типы</SelectItem>
-                      <SelectItem value="client">Клиенты</SelectItem>
-                      <SelectItem value="admin">Администраторы</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b-2 border-border">
-                      <TableHead className="text-foreground font-bold">ИНН</TableHead>
-                      <TableHead className="text-foreground font-bold">Название</TableHead>
-                      <TableHead className="text-foreground font-bold">Адрес</TableHead>
-                      <TableHead className="text-foreground font-bold">Телефон</TableHead>
-                      <TableHead className="text-foreground font-bold">Email</TableHead>
-                      <TableHead className="text-foreground font-bold">Логин</TableHead>
-                      <TableHead className="text-foreground font-bold">Тип</TableHead>
-                      <TableHead className="text-foreground font-bold">Действия</TableHead>
+                      <TableHead className="text-foreground font-bold py-2">ИНН</TableHead>
+                      <TableHead className="text-foreground font-bold py-2">Название</TableHead>
+                      <TableHead className="text-foreground font-bold py-2">Адрес</TableHead>
+                      <TableHead className="text-foreground font-bold py-2">Телефон</TableHead>
+                      <TableHead className="text-foreground font-bold py-2">Email</TableHead>
+                      <TableHead className="text-foreground font-bold py-2">Логин</TableHead>
+                      <TableHead className="text-foreground font-bold py-2">Тип</TableHead>
+                      <TableHead className="text-foreground font-bold py-2">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -770,9 +767,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         })
                         .map((client) => (
                       <TableRow key={client.id} className="border-b border-border">
-                        <TableCell className="font-mono text-foreground">{client.inn}</TableCell>
+                        <TableCell className="font-mono text-foreground py-2">{client.inn}</TableCell>
                         <TableCell 
-                          className="font-medium text-accent cursor-pointer hover:underline transition-all"
+                          className="font-medium text-accent cursor-pointer hover:underline transition-all py-2"
                           onClick={() => {
                             sessionStorage.setItem('fromAdmin', 'true');
                             sessionStorage.setItem('viewClientLogin', client.login);
@@ -782,22 +779,22 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         >
                           {client.name}
                         </TableCell>
-                        <TableCell className="text-foreground">{client.address}</TableCell>
-                        <TableCell className="text-foreground">{client.phone}</TableCell>
-                        <TableCell className="text-foreground">{client.email}</TableCell>
-                        <TableCell className="font-mono text-foreground">{client.login}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-foreground py-2">{client.address}</TableCell>
+                        <TableCell className="text-foreground py-2">{client.phone}</TableCell>
+                        <TableCell className="text-foreground py-2">{client.email}</TableCell>
+                        <TableCell className="font-mono text-foreground py-2">{client.login}</TableCell>
+                        <TableCell className="py-2">
                           <Badge className={client.admin ? 'bg-destructive text-destructive-foreground' : 'bg-primary text-primary-foreground'}>
                             {client.admin ? 'Админ' : 'Клиент'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEditClient(client)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
-                              <Icon name="Pencil" className="w-4 h-4" />
+                        <TableCell className="py-2">
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="outline" onClick={() => handleEditClient(client)} className="h-7 w-7 p-0 border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                              <Icon name="Pencil" className="w-3 h-3" />
                             </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleDeleteClient(client.id)}>
-                              <Icon name="Trash2" className="w-4 h-4" />
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteClient(client.id)} className="h-7 w-7 p-0">
+                              <Icon name="Trash2" className="w-3 h-3" />
                             </Button>
                           </div>
                         </TableCell>
