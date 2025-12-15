@@ -287,8 +287,8 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
           <div className="flex items-center gap-3">
             <Icon name="Fuel" size={32} className="text-accent" />
             <div>
-              <h1 className="text-2xl font-bold text-accent">СОЮЗ</h1>
-              <p className="text-sm text-muted-foreground">Кабинет клиента</p>
+              <h1 className="text-2xl font-bold text-accent">КАБИНЕТ КЛИЕНТА</h1>
+              <p className="text-sm text-muted-foreground">СИСТЕМА УПРАВЛЕНИЯ ТОПЛИВНЫМИ КАРТАМИ</p>
             </div>
           </div>
           <div className="flex gap-2">
