@@ -117,11 +117,17 @@ export const adminApi = {
       });
     },
     update: async (card: any) => {
-      await fetch(API_URLS.cards, {
+      const response = await fetch(API_URLS.cards, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(card)
       });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Card update error:', response.status, errorText);
+        throw new Error(`HTTP ${response.status} : ${API_URLS.cards}`);
+      }
+      return response.json();
     },
     delete: async (id: number) => {
       await fetch(`${API_URLS.cards}?id=${id}`, {

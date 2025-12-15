@@ -54,53 +54,53 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
     }
   }, []);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [clientsData, cardsData, fuelTypesData] = await Promise.all([
-          adminApi.clients.getAll(),
-          adminApi.cards.getAll(),
-          adminApi.fuelTypes.getAll()
-        ]);
-        
-        const client = clientsData.find((c: any) => c.login === clientLogin);
-        if (client) {
-          setClientData({
-            name: client.name,
-            inn: client.inn,
-            email: client.email,
-            phone: client.phone
-          });
-        }
-        
-        const clientCards = cardsData
-          .filter((card: any) => {
-            const cardClient = clientsData.find((c: any) => c.id === card.client_id);
-            return cardClient?.login === clientLogin;
-          })
-          .map((card: any) => {
-            const fuelType = fuelTypesData.find((ft: any) => ft.id === card.fuel_type_id);
-            const cardClient = clientsData.find((c: any) => c.id === card.client_id);
-            return {
-              id: card.id,
-              card_code: card.card_code,
-              fuel_type: fuelType?.name || '',
-              balance_liters: card.balance_liters,
-              daily_limit: card.daily_limit || 0,
-              status: card.status,
-              block_reason: card.block_reason || '',
-              owner: cardClient?.name || ''
-            };
-          });
-        
-        setCards(clientCards);
-      } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
-      } finally {
-        setLoading(false);
+  const loadData = async () => {
+    try {
+      const [clientsData, cardsData, fuelTypesData] = await Promise.all([
+        adminApi.clients.getAll(),
+        adminApi.cards.getAll(),
+        adminApi.fuelTypes.getAll()
+      ]);
+      
+      const client = clientsData.find((c: any) => c.login === clientLogin);
+      if (client) {
+        setClientData({
+          name: client.name,
+          inn: client.inn,
+          email: client.email,
+          phone: client.phone
+        });
       }
-    };
-    
+      
+      const clientCards = cardsData
+        .filter((card: any) => {
+          const cardClient = clientsData.find((c: any) => c.id === card.client_id);
+          return cardClient?.login === clientLogin;
+        })
+        .map((card: any) => {
+          const fuelType = fuelTypesData.find((ft: any) => ft.id === card.fuel_type_id);
+          const cardClient = clientsData.find((c: any) => c.id === card.client_id);
+          return {
+            id: card.id,
+            card_code: card.card_code,
+            fuel_type: fuelType?.name || '',
+            balance_liters: card.balance_liters,
+            daily_limit: card.daily_limit || 0,
+            status: card.status || 'активна',
+            block_reason: card.block_reason || '',
+            owner: cardClient?.name || ''
+          };
+        });
+      
+      setCards(clientCards);
+    } catch (error) {
+      console.error('Ошибка загрузки данных:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, [clientLogin]);
 
@@ -149,20 +149,13 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
   const confirmBlock = async () => {
     if (selectedCardId !== null) {
       try {
-        const card = cards.find(c => c.id === selectedCardId);
-        if (card) {
-          await adminApi.cards.update({
-            id: selectedCardId,
-            status: 'заблокирована',
-            block_reason: blockReason
-          });
-          
-          setCards(cards.map(c => 
-            c.id === selectedCardId 
-              ? { ...c, status: 'заблокирована', block_reason: blockReason }
-              : c
-          ));
-        }
+        await adminApi.cards.update({
+          id: selectedCardId,
+          status: 'заблокирована',
+          block_reason: blockReason
+        });
+        
+        await loadData();
       } catch (error) {
         console.error('Ошибка блокировки карты:', error);
       }
@@ -173,20 +166,13 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
   const confirmUnblock = async () => {
     if (selectedCardId !== null) {
       try {
-        const card = cards.find(c => c.id === selectedCardId);
-        if (card) {
-          await adminApi.cards.update({
-            id: selectedCardId,
-            status: 'активна',
-            block_reason: ''
-          });
-          
-          setCards(cards.map(c => 
-            c.id === selectedCardId 
-              ? { ...c, status: 'активна', block_reason: '' }
-              : c
-          ));
-        }
+        await adminApi.cards.update({
+          id: selectedCardId,
+          status: 'активна',
+          block_reason: ''
+        });
+        
+        await loadData();
       } catch (error) {
         console.error('Ошибка разблокировки карты:', error);
       }
