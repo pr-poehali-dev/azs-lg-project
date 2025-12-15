@@ -101,6 +101,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [newClient, setNewClient] = useState({inn: '', name: '', address: '', phone: '', email: '', login: '', password: '', admin: false});
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [filterClientType, setFilterClientType] = useState<string>('all');
 
   const handleDeleteClient = async (id: number) => {
     if (confirm('Удалить клиента?')) {
@@ -720,6 +721,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </CardHeader>
               <CardContent>
+                <div className="mb-4">
+                  <Label className="text-foreground">Тип клиента</Label>
+                  <Select value={filterClientType} onValueChange={setFilterClientType}>
+                    <SelectTrigger className="max-w-xs">
+                      <SelectValue placeholder="Все типы" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все типы</SelectItem>
+                      <SelectItem value="client">Клиенты</SelectItem>
+                      <SelectItem value="admin">Администраторы</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b-2 border-border">
@@ -747,7 +761,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      clients.map((client) => (
+                      clients
+                        .filter(client => {
+                          if (filterClientType === 'all') return true;
+                          if (filterClientType === 'admin') return client.admin === true;
+                          if (filterClientType === 'client') return client.admin === false;
+                          return true;
+                        })
+                        .map((client) => (
                       <TableRow key={client.id} className="border-b border-border">
                         <TableCell className="font-mono text-foreground">{client.inn}</TableCell>
                         <TableCell 
