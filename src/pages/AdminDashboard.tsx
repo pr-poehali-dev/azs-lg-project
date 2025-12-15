@@ -373,7 +373,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [editingCard, setEditingCard] = useState<any>(null);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
-  const [newCard, setNewCard] = useState({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: ''});
+  const [newCard, setNewCard] = useState({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: '', status: 'активна', block_reason: ''});
   const [cardSuccessDialog, setCardSuccessDialog] = useState<{open: boolean, card: any}>({open: false, card: null});
   const [filterCardClient, setFilterCardClient] = useState<string>('all');
   const [filterCardFuelType, setFilterCardFuelType] = useState<string>('all');
@@ -414,7 +414,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     if (!selectedClient || !selectedFuelType) return;
     
     try {
-      await adminApi.cards.create(newCard);
+      await adminApi.cards.create({...newCard, status: 'активна', block_reason: ''});
       
       if (newCard.balance_liters > 0) {
         const dateStr = formatDateForInput();
@@ -444,7 +444,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         pin_code: newCard.pin_code
       };
       
-      setNewCard({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: ''});
+      setNewCard({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: '', status: 'активна', block_reason: ''});
       setIsAddCardDialogOpen(false);
       setCardSuccessDialog({open: true, card: cardToShow});
     } catch (error) {
@@ -922,6 +922,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead className="text-foreground font-bold">Клиент</TableHead>
                       <TableHead className="text-foreground font-bold">Вид топлива</TableHead>
                       <TableHead className="text-foreground font-bold">Баланс (л)</TableHead>
+                      <TableHead className="text-foreground font-bold">Статус</TableHead>
                       <TableHead className="text-foreground font-bold">PIN-код</TableHead>
                       <TableHead className="text-foreground font-bold">Действия</TableHead>
                     </TableRow>
@@ -933,6 +934,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="text-foreground">{card.client_name}</TableCell>
                         <TableCell className="text-foreground">{card.fuel_type}</TableCell>
                         <TableCell className="font-bold text-accent">{card.balance_liters.toFixed(3)}</TableCell>
+                        <TableCell>
+                          <Badge className={card.status === 'активна' ? 'bg-primary text-primary-foreground' : 'bg-destructive text-destructive-foreground'}>
+                            {card.status || 'активна'}
+                          </Badge>
+                          {card.block_reason && (
+                            <span className="text-xs text-muted-foreground block mt-1" title={card.block_reason}>
+                              {card.block_reason.length > 20 ? card.block_reason.substring(0, 20) + '...' : card.block_reason}
+                            </span>
+                          )}
+                        </TableCell>
                         <TableCell className="font-mono text-muted-foreground">{card.pin_code}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
@@ -1392,6 +1403,24 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Label htmlFor="edit-card-pin" className="text-right text-foreground">PIN-код</Label>
                 <Input id="edit-card-pin" type="password" value={editingCard.pin_code} onChange={(e) => setEditingCard({...editingCard, pin_code: e.target.value})} className="col-span-3" />
               </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-card-status" className="text-right text-foreground">Статус</Label>
+                <Select value={editingCard.status || 'активна'} onValueChange={(value) => setEditingCard({...editingCard, status: value})}>
+                  <SelectTrigger id="edit-card-status" className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="активна">Активна</SelectItem>
+                    <SelectItem value="заблокирована">Заблокирована</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {editingCard.status === 'заблокирована' && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-card-block-reason" className="text-right text-foreground">Причина блокировки</Label>
+                  <Input id="edit-card-block-reason" value={editingCard.block_reason || ''} onChange={(e) => setEditingCard({...editingCard, block_reason: e.target.value})} className="col-span-3" />
+                </div>
+              )}
             </div>
           )}
           <div className="flex justify-end gap-2">
