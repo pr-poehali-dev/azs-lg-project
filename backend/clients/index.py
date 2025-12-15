@@ -79,6 +79,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif method == 'POST':
             body_data = json.loads(event.get('body', '{}'))
             
+            print(f"Creating client: {body_data.get('login')}")
+            
             cursor.execute("""
                 INSERT INTO clients (inn, name, address, phone, email, login, password, admin)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -224,6 +226,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             }
     
     except Exception as e:
+        print(f"Error: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        
         if 'conn' in locals():
             conn.close()
         

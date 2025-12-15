@@ -23,11 +23,17 @@ export const adminApi = {
       }
     },
     create: async (client: any) => {
-      await fetch(API_URLS.clients, {
+      const response = await fetch(API_URLS.clients, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(client)
       });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Client creation error:', errorData);
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
     },
     update: async (client: any) => {
       await fetch(API_URLS.clients, {
