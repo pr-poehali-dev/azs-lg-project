@@ -579,10 +579,20 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <p className="text-sm text-muted-foreground">Управление системой</p>
               </div>
             </div>
-            <Button onClick={onLogout} variant="outline" className="flex items-center gap-2 border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
-              <Icon name="LogOut" className="w-4 h-4" />
-              Выход
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => window.open('/admin-manual.html', '_blank')} 
+                variant="outline" 
+                className="flex items-center gap-2 border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground"
+              >
+                <Icon name="BookOpen" className="w-4 h-4" />
+                Инструкция
+              </Button>
+              <Button onClick={onLogout} variant="outline" className="flex items-center gap-2 border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">
+                <Icon name="LogOut" className="w-4 h-4" />
+                Выход
+              </Button>
+            </div>
           </div>
         </div>
       </header>
