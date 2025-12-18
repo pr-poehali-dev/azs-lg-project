@@ -425,6 +425,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
   const [newCard, setNewCard] = useState({card_code: '', client_id: '', fuel_type_id: '', balance_liters: 0, pin_code: '', status: 'активна', block_reason: '', daily_limit: 0});
   const [cardSuccessDialog, setCardSuccessDialog] = useState<{open: boolean, card: any}>({open: false, card: null});
+  const [fuelTypeWarningDialog, setFuelTypeWarningDialog] = useState(false);
   const [filterCardClient, setFilterCardClient] = useState<string>('all');
   const [filterCardFuelType, setFilterCardFuelType] = useState<string>('all');
 
@@ -454,6 +455,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       } catch (error) {
         console.error('Error updating card:', error);
       }
+    }
+  };
+
+  const handleFuelTypeChange = (value: string) => {
+    if (editingCard && editingCard.balance_liters !== 0) {
+      setFuelTypeWarningDialog(true);
+    } else {
+      setEditingCard({...editingCard, fuel_type_id: parseInt(value)});
     }
   };
 
@@ -1460,7 +1469,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-card-fuel" className="text-right text-foreground">Вид топлива</Label>
-                <Input id="edit-card-fuel" value={editingCard.fuel_type} onChange={(e) => setEditingCard({...editingCard, fuel_type: e.target.value})} className="col-span-3" />
+                <Select value={editingCard.fuel_type_id?.toString() || ''} onValueChange={handleFuelTypeChange}>
+                  <SelectTrigger id="edit-card-fuel" className="col-span-3">
+                    <SelectValue placeholder="Выберите вид топлива" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fuelTypes.map((ft) => (
+                      <SelectItem key={ft.id} value={ft.id.toString()}>{ft.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-card-balance" className="text-right text-foreground">Баланс (л)</Label>
@@ -1497,6 +1515,31 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsCardDialogOpen(false)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground">Отмена</Button>
             <Button onClick={handleSaveCard} className="bg-accent text-accent-foreground hover:bg-accent/90">Сохранить</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={fuelTypeWarningDialog} onOpenChange={setFuelTypeWarningDialog}>
+        <DialogContent className="max-w-md bg-destructive/10 border-2 border-destructive">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Icon name="AlertTriangle" size={24} />
+              Внимание!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-foreground text-center">
+              Вид топлива можно изменить только при балансе карты равном 0. 
+              Обратитесь к администратору!
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Button 
+              onClick={() => setFuelTypeWarningDialog(false)} 
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              Понятно
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
