@@ -54,16 +54,6 @@ export default function Login({ onLogin }: LoginProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex flex-col items-center px-8 pt-5 relative overflow-hidden">
-      <div className="fixed bottom-8 right-8 z-50 animate-bounce">
-        <div className="relative">
-          <div className="text-6xl animate-pulse">🎄</div>
-          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-            <p className="text-accent font-bold text-lg drop-shadow-lg animate-pulse">
-              С Новым Годом!
-            </p>
-          </div>
-        </div>
-      </div>
       
       <div className="w-full max-w-4xl flex flex-col items-center">
         <h1 className="md:text-4xl font-bold text-center text-accent drop-shadow-2xl tracking-tight text-3xl">
