@@ -273,12 +273,14 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
 
   const uniqueFuelTypes = Array.from(new Set(cards.map(card => card.fuel_type)));
 
-  const filteredCards = cards.filter(card => {
-    const matchesStatus = statusFilter === 'all' || card.status === statusFilter;
-    const matchesFuelType = fuelTypeFilter === 'all' || card.fuel_type === fuelTypeFilter;
-    const matchesSearch = cardSearch === '' || card.card_code.toLowerCase().includes(cardSearch.toLowerCase());
-    return matchesStatus && matchesFuelType && matchesSearch;
-  });
+  const filteredCards = cards
+    .filter(card => {
+      const matchesStatus = statusFilter === 'all' || card.status === statusFilter;
+      const matchesFuelType = fuelTypeFilter === 'all' || card.fuel_type === fuelTypeFilter;
+      const matchesSearch = cardSearch === '' || card.card_code.toLowerCase().includes(cardSearch.toLowerCase());
+      return matchesStatus && matchesFuelType && matchesSearch;
+    })
+    .sort((a, b) => a.card_code.localeCompare(b.card_code));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
@@ -437,8 +439,15 @@ export default function ClientDashboard({ clientLogin, onLogout }: ClientDashboa
                 ) : (
                   filteredCards.map((card) => (
                   <TableRow key={card.id} className="border-b border-border">
-                    <TableCell className="font-mono text-accent py-2">
-                      {card.card_code}
+                    <TableCell className="font-mono py-2">
+                      <div className="flex items-center gap-2">
+                        <span className={card.card_code === '0000' ? 'bg-accent text-background px-1 rounded' : 'text-accent'}>
+                          {card.card_code}
+                        </span>
+                        {card.card_code === '0000' && (
+                          <Icon name="Wallet" size={16} className="text-accent" title="Баланс" />
+                        )}
+                      </div>
                       {card.status === 'заблокирована' && card.block_reason && (
                         <p className="text-xs text-destructive mt-1">Причина: {card.block_reason}</p>
                       )}
