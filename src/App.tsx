@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import CardOperations from "./pages/CardOperations";
+import OperatorPanel from "./pages/OperatorPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => {
               <Route path="/client" element={<ClientRoute />} />
               <Route path="/card-operations" element={<CardOperations />} />
               <Route path="/admin" element={<AdminDashboard onLogout={() => window.location.href = '/'} />} />
+              <Route path="/operator" element={<OperatorPanel />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

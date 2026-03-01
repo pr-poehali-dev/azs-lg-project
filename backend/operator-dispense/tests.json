@@ -1,0 +1,20 @@
+{
+  "tests": [
+    {
+      "name": "GET card info",
+      "method": "GET",
+      "path": "/?card_code=0000",
+      "expectedStatus": 200,
+      "expectedBody": {"card_code": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "GET card not found",
+      "method": "GET",
+      "path": "/?card_code=9999",
+      "expectedStatus": 404,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
