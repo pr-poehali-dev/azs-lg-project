@@ -144,9 +144,49 @@ export default function OperatorPanel() {
   useEffect(() => {
     fetch(STATIONS_API)
       .then((r) => r.json())
-      .then((d) => setStations(d.stations || []))
+      .then((d) => {
+        const list: Station[] = d.stations || [];
+        setStations(list);
+        const saved = localStorage.getItem('operator_session');
+        if (saved) {
+          try {
+            const { login: sl, password: sp, stationId } = JSON.parse(saved);
+            const st = list.find((s) => s.id === stationId);
+            if (sl && sp && st) {
+              setLogin(sl);
+              setPassword(sp);
+              setSelectedStation(st);
+              autoLogin(sl, sp, st);
+            }
+          } catch (e) {
+            console.warn('operator_session parse error', e);
+          }
+        }
+      })
       .finally(() => setStationsLoading(false));
   }, []);
+
+  const autoLogin = async (l: string, p: string, st: Station) => {
+    setAuthLoading(true);
+    try {
+      const res = await fetch(AUTH_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: l, password: p }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.user.admin) {
+        setSelectedStation(st);
+        setStage('scan');
+      } else {
+        localStorage.removeItem('operator_session');
+      }
+    } catch {
+      localStorage.removeItem('operator_session');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (stage === 'scan') {
@@ -169,6 +209,9 @@ export default function OperatorPanel() {
       });
       const data = await res.json();
       if (res.ok && data.success && data.user.admin) {
+        if (selectedStation) {
+          localStorage.setItem('operator_session', JSON.stringify({ login, password, stationId: selectedStation.id }));
+        }
         setStage('scan');
       } else if (res.ok && data.success && !data.user.admin) {
         setAuthError('Доступ только для операторов');
@@ -412,7 +455,7 @@ export default function OperatorPanel() {
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate('/')}
+            onClick={() => { localStorage.removeItem('operator_session'); navigate('/'); }}
             className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground font-bold px-6"
           >
             <Icon name="LogOut" size={16} className="mr-2" />
