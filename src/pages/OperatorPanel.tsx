@@ -314,7 +314,7 @@ export default function OperatorPanel() {
                     className="w-full h-11 rounded-md border-2 border-border bg-input text-foreground px-3 text-base focus:border-accent outline-none"
                   >
                     <option value="" disabled>Выберите АЗС...</option>
-                    {stations.map((s) => (
+                    {stations.filter((s) => !s.name.toLowerCase().includes('склад')).map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
