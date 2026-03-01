@@ -1012,7 +1012,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <TableCell className="text-foreground py-1">
                           {card.daily_limit > 0 ? card.daily_limit.toFixed(3) : <span className="text-muted-foreground">без лимита</span>}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="py-1">
                           <Badge className={card.status === 'активна' ? 'bg-primary text-primary-foreground' : 'bg-destructive text-destructive-foreground'}>
                             {card.status || 'активна'}
                           </Badge>
@@ -1022,29 +1022,29 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="font-mono text-muted-foreground">{card.pin_code}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleTopupCard(card.id)} className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground" title="Пополнить">
-                              <Icon name="Plus" className="w-4 h-4" />
+                        <TableCell className="font-mono text-muted-foreground py-1">{card.pin_code}</TableCell>
+                        <TableCell className="py-1">
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="outline" onClick={() => handleTopupCard(card.id)} className="h-7 w-7 border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground" title="Пополнить">
+                              <Icon name="Plus" className="w-3 h-3" />
                             </Button>
                             {card.status === 'активна' ? (
-                              <Button size="sm" variant="outline" onClick={() => handleBlockCard(card.id)} className="border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground" title="Заблокировать">
-                                <Icon name="Lock" className="w-4 h-4" />
+                              <Button size="icon" variant="outline" onClick={() => handleBlockCard(card.id)} className="h-7 w-7 border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground" title="Заблокировать">
+                                <Icon name="Lock" className="w-3 h-3" />
                               </Button>
                             ) : (
-                              <Button size="sm" variant="outline" onClick={() => handleUnblockCard(card.id)} className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground" title="Разблокировать">
-                                <Icon name="Unlock" className="w-4 h-4" />
+                              <Button size="icon" variant="outline" onClick={() => handleUnblockCard(card.id)} className="h-7 w-7 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground" title="Разблокировать">
+                                <Icon name="Unlock" className="w-3 h-3" />
                               </Button>
                             )}
-                            <Button size="sm" variant="outline" onClick={() => handleEditCard(card)} className="border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground" title="Редактировать">
-                              <Icon name="Pencil" className="w-4 h-4" />
+                            <Button size="icon" variant="outline" onClick={() => handleEditCard(card)} className="h-7 w-7 border-2 border-accent text-foreground hover:bg-accent hover:text-accent-foreground" title="Редактировать">
+                              <Icon name="Pencil" className="w-3 h-3" />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleRecalculateBalance(card.id)} className="border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground" title="Пересчитать баланс">
-                              <Icon name="RefreshCw" className="w-4 h-4" />
+                            <Button size="icon" variant="outline" onClick={() => handleRecalculateBalance(card.id)} className="h-7 w-7 border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground" title="Пересчитать баланс">
+                              <Icon name="RefreshCw" className="w-3 h-3" />
                             </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleDeleteCard(card.id)} title="Удалить">
-                              <Icon name="Trash2" className="w-4 h-4" />
+                            <Button size="icon" variant="destructive" onClick={() => handleDeleteCard(card.id)} className="h-7 w-7" title="Удалить">
+                              <Icon name="Trash2" className="w-3 h-3" />
                             </Button>
                           </div>
                         </TableCell>
