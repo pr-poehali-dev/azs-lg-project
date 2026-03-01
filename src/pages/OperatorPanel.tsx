@@ -133,6 +133,7 @@ export default function OperatorPanel() {
 
   const [quantity, setQuantity] = useState('');
   const [showNumpad, setShowNumpad] = useState(false);
+  const [invalidCodeWarning, setInvalidCodeWarning] = useState<string | null>(null);
   const [dispenseError, setDispenseError] = useState('');
   const [dispenseLoading, setDispenseLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -191,8 +192,20 @@ export default function OperatorPanel() {
     e.preventDefault();
     if (!barcode.trim()) return;
     setCardError('');
-    setCardLoading(true);
     const code = extractCardCode(barcode);
+
+    if (code === '0000') {
+      setInvalidCodeWarning('Карта с кодом 0000 является системной и не может использоваться для отпуска топлива.');
+      setBarcode('');
+      return;
+    }
+    if (!/^\d{1,4}$/.test(code)) {
+      setInvalidCodeWarning(`Код карты «${code}» содержит недопустимые символы. Код карты должен состоять только из цифр.`);
+      setBarcode('');
+      return;
+    }
+
+    setCardLoading(true);
     try {
       const res = await fetch(`${OPERATOR_API}?card_code=${encodeURIComponent(code)}`);
       const data = await res.json();
@@ -360,6 +373,29 @@ export default function OperatorPanel() {
           onConfirm={handleNumpadConfirm}
           onCancel={() => setShowNumpad(false)}
         />
+      )}
+
+      {invalidCodeWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
+          <div className="bg-card border-4 border-destructive rounded-3xl shadow-2xl p-10 w-full max-w-lg mx-4 flex flex-col items-center gap-6 text-center">
+            <div className="w-24 h-24 rounded-full bg-destructive/15 border-4 border-destructive flex items-center justify-center">
+              <Icon name="ShieldAlert" size={52} className="text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black text-destructive mb-3 uppercase tracking-wide">Недопустимый код карты</h2>
+              <p className="text-foreground text-lg leading-relaxed">{invalidCodeWarning}</p>
+            </div>
+            <Button
+              onClick={() => {
+                setInvalidCodeWarning(null);
+                setTimeout(() => barcodeRef.current?.focus(), 50);
+              }}
+              className="h-14 px-12 text-xl font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+            >
+              Понятно
+            </Button>
+          </div>
+        </div>
       )}
 
       <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex flex-col">
