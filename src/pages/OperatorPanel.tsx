@@ -19,6 +19,97 @@ interface CardInfo {
 
 type Stage = 'login' | 'scan' | 'card' | 'confirm';
 
+function NumpadModal({
+  value,
+  onConfirm,
+  onCancel,
+}: {
+  value: string;
+  onConfirm: (v: string) => void;
+  onCancel: () => void;
+}) {
+  const [input, setInput] = useState(value);
+
+  const press = (key: string) => {
+    setInput((prev) => {
+      if (key === 'DEL') return prev.slice(0, -1);
+      if (key === 'CLR') return '';
+      if (key === '.') {
+        if (prev.includes('.')) return prev;
+        return prev === '' ? '0.' : prev + '.';
+      }
+      const parts = prev.split('.');
+      if (parts[1] !== undefined && parts[1].length >= 3) return prev;
+      return prev + key;
+    });
+  };
+
+  const keys = [
+    ['7', '8', '9'],
+    ['4', '5', '6'],
+    ['1', '2', '3'],
+    ['CLR', '0', '.'],
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-card border-2 border-accent rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+        <div className="text-center text-muted-foreground text-lg font-medium">Введите количество (л)</div>
+
+        <div className="bg-input border-2 border-accent rounded-xl px-4 py-3 text-center font-mono font-bold text-foreground"
+          style={{ fontSize: '3rem', letterSpacing: '0.05em', minHeight: '5rem', lineHeight: 1 }}>
+          {input || <span className="text-muted-foreground/50">0</span>}
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          {keys.map((row, ri) =>
+            row.map((k) => (
+              <button
+                key={`${ri}-${k}`}
+                onClick={() => press(k)}
+                className={`rounded-xl font-bold transition-all active:scale-95 select-none
+                  ${k === 'CLR'
+                    ? 'bg-destructive/20 text-destructive border-2 border-destructive/40 hover:bg-destructive/30'
+                    : 'bg-secondary text-foreground border-2 border-border hover:bg-accent hover:text-accent-foreground hover:border-accent'
+                  }`}
+                style={{ fontSize: '2rem', height: '4rem' }}
+              >
+                {k === 'CLR' ? <Icon name="Delete" size={24} className="mx-auto" /> : k}
+              </button>
+            ))
+          )}
+        </div>
+
+        <button
+          onClick={() => press('DEL')}
+          className="w-full rounded-xl border-2 border-border bg-secondary text-foreground hover:bg-muted font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
+          style={{ height: '3.5rem', fontSize: '1.2rem' }}
+        >
+          <Icon name="Delete" size={20} />
+          Стереть
+        </button>
+
+        <div className="flex gap-3 mt-1">
+          <Button
+            onClick={onCancel}
+            variant="outline"
+            className="flex-1 h-14 text-lg font-bold border-2 border-border"
+          >
+            Отмена
+          </Button>
+          <Button
+            onClick={() => onConfirm(input)}
+            disabled={!input || input === '0' || input === '0.'}
+            className="flex-1 h-14 text-lg font-bold bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40"
+          >
+            ОК
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function OperatorPanel() {
   const navigate = useNavigate();
 
@@ -35,6 +126,7 @@ export default function OperatorPanel() {
   const [cardLoading, setCardLoading] = useState(false);
 
   const [quantity, setQuantity] = useState('');
+  const [showNumpad, setShowNumpad] = useState(false);
   const [dispenseError, setDispenseError] = useState('');
   const [dispenseLoading, setDispenseLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -78,9 +170,7 @@ export default function OperatorPanel() {
 
   const extractCardCode = (raw: string): string => {
     const cleaned = raw.trim();
-    if (cleaned.length >= 12) {
-      return cleaned.substring(8, 12);
-    }
+    if (cleaned.length >= 12) return cleaned.substring(8, 12);
     return cleaned;
   };
 
@@ -111,7 +201,7 @@ export default function OperatorPanel() {
     }
   };
 
-  const handleDispense = async () => {
+  const handleDispense = () => {
     if (!cardInfo) return;
     const qty = parseFloat(quantity.replace(',', '.'));
     if (isNaN(qty) || qty <= 0) {
@@ -162,8 +252,10 @@ export default function OperatorPanel() {
     setStage('scan');
   };
 
-  const handleLogout = () => {
-    navigate('/');
+  const handleNumpadConfirm = (val: string) => {
+    setQuantity(val);
+    setShowNumpad(false);
+    setDispenseError('');
   };
 
   const qty = parseFloat(quantity.replace(',', '.'));
@@ -219,170 +311,193 @@ export default function OperatorPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex flex-col">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card/80">
-        <h1 className="text-2xl font-bold text-accent tracking-wide">Панель оператора</h1>
-        <Button
-          variant="outline"
-          onClick={handleLogout}
-          className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground font-bold px-6"
-        >
-          <Icon name="LogOut" size={16} className="mr-2" />
-          ВЫХОД
-        </Button>
-      </div>
+    <>
+      {showNumpad && (
+        <NumpadModal
+          value={quantity}
+          onConfirm={handleNumpadConfirm}
+          onCancel={() => setShowNumpad(false)}
+        />
+      )}
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 gap-6">
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card/80">
+          <h1 className="text-2xl font-bold text-accent tracking-wide">Панель оператора</h1>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/')}
+            className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground font-bold px-6"
+          >
+            <Icon name="LogOut" size={16} className="mr-2" />
+            ВЫХОД
+          </Button>
+        </div>
 
-        {stage === 'scan' && (
-          <div className="w-full max-w-lg flex flex-col items-center gap-4">
-            <p className="text-muted-foreground text-center text-lg">
-              Поднесите штрихкод карты к сканеру или введите код вручную
-            </p>
-            <form onSubmit={handleBarcodeSubmit} className="w-full flex flex-col gap-3">
-              <Input
-                ref={barcodeRef}
-                type="text"
-                placeholder="Сканируйте штрихкод карты..."
-                value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
-                className="h-14 text-xl text-center bg-input border-2 border-accent focus:border-accent text-foreground font-mono tracking-widest"
-                disabled={cardLoading}
-                autoComplete="off"
-              />
-              {cardError && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive text-destructive text-sm text-center">
-                  {cardError}
-                </div>
-              )}
-              <Button
-                type="submit"
-                disabled={cardLoading || !barcode.trim()}
-                className="h-12 font-bold text-lg bg-accent text-accent-foreground hover:bg-accent/90"
-              >
-                {cardLoading ? 'Поиск...' : 'Найти карту'}
-              </Button>
-            </form>
-          </div>
-        )}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 gap-6">
 
-        {(stage === 'card' || stage === 'confirm') && cardInfo && (
-          <div className="w-full max-w-lg flex flex-col gap-4">
-
-            <Card className="border-2 border-accent bg-card shadow-lg">
-              <CardContent className="pt-5 pb-4 grid grid-cols-2 gap-y-3 gap-x-4">
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Номер карты</div>
-                  <div className="font-mono text-xl font-bold text-accent">{cardInfo.card_code}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Клиент</div>
-                  <div className="text-foreground font-medium">{cardInfo.client_name}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Вид топлива</div>
-                  <div className="text-foreground font-medium">{cardInfo.fuel_type}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Баланс</div>
-                  <div className="text-foreground font-bold text-lg">{cardInfo.balance_liters.toFixed(3)} л</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Дневной лимит</div>
-                  <div className="text-foreground">
-                    {cardInfo.daily_limit > 0 ? `${cardInfo.daily_limit.toFixed(3)} л` : 'без лимита'}
+          {stage === 'scan' && (
+            <div className="w-full max-w-xl flex flex-col items-center gap-5">
+              <p className="text-muted-foreground text-center text-xl">
+                Поднесите штрихкод карты к сканеру или введите код вручную
+              </p>
+              <form onSubmit={handleBarcodeSubmit} className="w-full flex flex-col gap-4">
+                <input
+                  ref={barcodeRef}
+                  type="text"
+                  placeholder="Сканируйте штрихкод..."
+                  value={barcode}
+                  onChange={(e) => setBarcode(e.target.value)}
+                  disabled={cardLoading}
+                  autoComplete="off"
+                  className="w-full bg-input border-2 border-accent rounded-xl text-center font-mono font-bold text-foreground outline-none focus:border-accent focus:ring-0 px-4"
+                  style={{ fontSize: '3rem', height: '5.5rem', letterSpacing: '0.08em' }}
+                />
+                {cardError && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive text-destructive text-base text-center">
+                    {cardError}
                   </div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Доступно</div>
-                  <div className={`font-bold text-lg ${cardInfo.available_balance > 0 ? 'text-green-500' : 'text-destructive'}`}>
-                    {cardInfo.available_balance.toFixed(3)} л
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                )}
+                <Button
+                  type="submit"
+                  disabled={cardLoading || !barcode.trim()}
+                  className="h-14 font-bold text-xl bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                  {cardLoading ? 'Поиск...' : 'Найти карту'}
+                </Button>
+              </form>
+            </div>
+          )}
 
-            {successMsg ? (
-              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500 text-green-500 text-center text-lg font-bold">
-                <Icon name="CheckCircle" size={24} className="mx-auto mb-1" />
-                {successMsg}
-              </div>
-            ) : stage === 'confirm' ? (
-              <div className="flex flex-col gap-3">
-                <div className="p-4 rounded-lg bg-accent/10 border-2 border-accent text-foreground text-center text-lg font-semibold">
-                  Отпустить <span className="text-accent font-bold">{parseFloat(quantity.replace(',', '.')).toFixed(3)} л</span> на карту{' '}
-                  <span className="font-mono text-accent">{cardInfo.card_code}</span>?
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleConfirmYes}
-                    disabled={dispenseLoading}
-                    className="flex-1 h-12 font-bold text-lg bg-accent text-accent-foreground hover:bg-accent/90"
-                  >
-                    {dispenseLoading ? 'Выполняется...' : 'Да, отпустить'}
-                  </Button>
-                  <Button
-                    onClick={() => setStage('card')}
-                    variant="outline"
-                    disabled={dispenseLoading}
-                    className="flex-1 h-12 font-bold text-lg border-2 border-border"
-                  >
-                    Нет
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground font-medium text-center">
-                    Количество топлива для отпуска (литры)
-                  </label>
-                  <Input
-                    ref={quantityRef}
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0000.000"
-                    value={quantity}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (/^[\d]*[.,]?[\d]{0,3}$/.test(val) || val === '') {
-                        setQuantity(val);
-                        setDispenseError('');
-                      }
-                    }}
-                    className="h-16 text-3xl text-center font-mono bg-input border-2 border-accent focus:border-accent text-foreground tracking-widest"
-                    autoComplete="off"
-                  />
-                  {dispenseError && (
-                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive text-destructive text-sm text-center">
-                      {dispenseError}
+          {(stage === 'card' || stage === 'confirm') && cardInfo && (
+            <div className="w-full max-w-xl flex flex-col gap-4">
+
+              <Card className="border-2 border-accent bg-card shadow-lg">
+                <CardContent className="pt-5 pb-4 grid grid-cols-2 gap-y-3 gap-x-4">
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Номер карты</div>
+                    <div className="font-mono text-2xl font-bold text-accent">{cardInfo.card_code}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Клиент</div>
+                    <div className="text-foreground font-medium text-lg">{cardInfo.client_name}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Вид топлива</div>
+                    <div className="text-foreground font-medium text-lg">{cardInfo.fuel_type}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Баланс</div>
+                    <div className="text-foreground font-bold text-xl">{cardInfo.balance_liters.toFixed(3)} л</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Дневной лимит</div>
+                    <div className="text-foreground text-lg">
+                      {cardInfo.daily_limit > 0 ? `${cardInfo.daily_limit.toFixed(3)} л` : 'без лимита'}
                     </div>
-                  )}
-                </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Доступно</div>
+                    <div className={`font-bold text-xl ${cardInfo.available_balance > 0 ? 'text-green-500' : 'text-destructive'}`}>
+                      {cardInfo.available_balance.toFixed(3)} л
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleDispense}
-                    disabled={!validQty}
-                    className="flex-1 h-12 font-bold text-lg bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40"
-                  >
-                    <Icon name="Fuel" size={18} className="mr-2" />
-                    Отпустить топливо
-                  </Button>
-                  <Button
-                    onClick={handleReset}
-                    variant="outline"
-                    className="flex-1 h-12 font-bold text-lg border-2 border-border"
-                  >
-                    <Icon name="X" size={18} className="mr-2" />
-                    Отмена
-                  </Button>
+              {successMsg ? (
+                <div className="p-5 rounded-xl bg-green-500/10 border-2 border-green-500 text-green-500 text-center text-xl font-bold">
+                  <Icon name="CheckCircle" size={32} className="mx-auto mb-2" />
+                  {successMsg}
                 </div>
-              </>
-            )}
-          </div>
-        )}
+              ) : stage === 'confirm' ? (
+                <div className="flex flex-col gap-3">
+                  <div className="p-5 rounded-xl bg-accent/10 border-2 border-accent text-foreground text-center text-xl font-semibold">
+                    Отпустить <span className="text-accent font-bold text-2xl">{parseFloat(quantity.replace(',', '.')).toFixed(3)} л</span> на карту{' '}
+                    <span className="font-mono text-accent">{cardInfo.card_code}</span>?
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleConfirmYes}
+                      disabled={dispenseLoading}
+                      className="flex-1 h-16 font-bold text-xl bg-accent text-accent-foreground hover:bg-accent/90"
+                    >
+                      {dispenseLoading ? 'Выполняется...' : 'Да, отпустить'}
+                    </Button>
+                    <Button
+                      onClick={() => setStage('card')}
+                      variant="outline"
+                      disabled={dispenseLoading}
+                      className="flex-1 h-16 font-bold text-xl border-2 border-border"
+                    >
+                      Нет
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-base text-muted-foreground font-medium text-center">
+                      Количество топлива для отпуска (литры)
+                    </label>
+                    <div className="flex gap-2 items-stretch">
+                      <input
+                        ref={quantityRef}
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0000.000"
+                        value={quantity}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (/^[\d]*[.,]?[\d]{0,3}$/.test(val) || val === '') {
+                            setQuantity(val);
+                            setDispenseError('');
+                          }
+                        }}
+                        className="flex-1 bg-input border-2 border-accent rounded-xl text-center font-mono font-bold text-foreground outline-none focus:border-accent px-4"
+                        style={{ fontSize: '3rem', height: '5.5rem', letterSpacing: '0.08em' }}
+                        autoComplete="off"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNumpad(true)}
+                        className="flex flex-col items-center justify-center rounded-xl border-2 border-accent bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent transition-all px-4 gap-1"
+                        title="Цифровая клавиатура"
+                      >
+                        <Icon name="Grid3x3" size={28} />
+                        <span className="text-xs font-semibold">Клавиши</span>
+                      </button>
+                    </div>
+                    {dispenseError && (
+                      <div className="p-3 rounded-lg bg-destructive/10 border border-destructive text-destructive text-base text-center">
+                        {dispenseError}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleDispense}
+                      disabled={!validQty}
+                      className="flex-1 h-14 font-bold text-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40"
+                    >
+                      <Icon name="Fuel" size={20} className="mr-2" />
+                      Отпустить топливо
+                    </Button>
+                    <Button
+                      onClick={handleReset}
+                      variant="outline"
+                      className="flex-1 h-14 font-bold text-xl border-2 border-border"
+                    >
+                      <Icon name="X" size={20} className="mr-2" />
+                      Отмена
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
