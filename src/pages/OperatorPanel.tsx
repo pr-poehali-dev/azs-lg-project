@@ -461,9 +461,18 @@ export default function OperatorPanel() {
                 </div>
               ) : stage === 'confirm' ? (
                 <div className="flex flex-col gap-3">
-                  <div className="p-5 rounded-xl bg-accent/10 border-2 border-accent text-foreground text-center text-xl font-semibold">
-                    Отпустить <span className="text-accent font-bold text-2xl">{parseFloat(quantity.replace(',', '.')).toFixed(3)} л</span> на карту{' '}
-                    <span className="font-mono text-accent">{cardInfo.card_code}</span>?
+                  <div className="p-5 rounded-xl bg-accent/10 border-2 border-accent text-foreground text-center text-xl font-semibold flex flex-col gap-2">
+                    <div>
+                      Отпустить <span className="text-accent font-bold text-2xl">{parseFloat(quantity.replace(',', '.')).toFixed(3)} л</span> на карту{' '}
+                      <span className="font-mono text-accent">{cardInfo.card_code}</span>?
+                    </div>
+                    <div className="text-base text-muted-foreground font-normal flex flex-col gap-0.5">
+                      <span><span className="font-medium text-foreground">Клиент:</span> {cardInfo.client_name}</span>
+                      <span><span className="font-medium text-foreground">Топливо:</span> {cardInfo.fuel_type}</span>
+                      {selectedStation && (
+                        <span><span className="font-medium text-foreground">АЗС:</span> {selectedStation.name}</span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex gap-3">
                     <Button
