@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -114,6 +114,7 @@ function NumpadModal({
 
 export default function OperatorPanel() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [stage, setStage] = useState<Stage>('login');
 
@@ -142,11 +143,27 @@ export default function OperatorPanel() {
   const quantityRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const urlLogin = searchParams.get('login');
+    const urlPassword = searchParams.get('password');
+    const urlStation = searchParams.get('station');
+
     fetch(STATIONS_API)
       .then((r) => r.json())
       .then((d) => {
         const list: Station[] = d.stations || [];
         setStations(list);
+
+        if (urlLogin && urlPassword && urlStation) {
+          const st = list.find((s) => s.id === Number(urlStation));
+          if (st) {
+            setLogin(urlLogin);
+            setPassword(urlPassword);
+            setSelectedStation(st);
+            autoLogin(urlLogin, urlPassword, st);
+            return;
+          }
+        }
+
         const saved = localStorage.getItem('operator_session');
         if (saved) {
           try {
