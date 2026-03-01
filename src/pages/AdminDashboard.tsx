@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
+import TablePagination from '@/components/ui/table-pagination';
 import { adminApi } from '@/utils/adminApi';
 import { formatDateForInput } from '@/utils/dateUtils';
 
@@ -523,6 +524,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const uniqueClientNames = Array.from(new Set(cards.map(c => c.client_name).filter(name => nonAdminClientNames.includes(name))));
   const uniqueCardFuelTypes = Array.from(new Set(cards.map(c => c.fuel_type)));
 
+  const cardsTotalPages = Math.ceil(filteredCards.length / cardsPageSize) || 1;
+  const safeCardsPage = Math.min(cardsPage, cardsTotalPages);
+  const pagedCards = filteredCards.slice((safeCardsPage - 1) * cardsPageSize, safeCardsPage * cardsPageSize);
+
 
 
   const [editingOperation, setEditingOperation] = useState<any>(null);
@@ -535,6 +540,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [filterDateFrom, setFilterDateFrom] = useState<string>('');
   const [filterDateTo, setFilterDateTo] = useState<string>('');
   const [balanceChangeDialog, setBalanceChangeDialog] = useState<{open: boolean, cardCode: string, oldBalance: number, newBalance: number}>({open: false, cardCode: '', oldBalance: 0, newBalance: 0});
+
+  const [cardsPage, setCardsPage] = useState(1);
+  const [cardsPageSize, setCardsPageSize] = useState(20);
+  const [opsPage, setOpsPage] = useState(1);
+  const [opsPageSize, setOpsPageSize] = useState(20);
 
   const handleDeleteOperation = async (id: number) => {
     if (confirm('Удалить операцию?')) {
@@ -600,6 +610,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     const matchesDateTo = !filterDateTo || op.operation_date <= filterDateTo + ' 23:59';
     return matchesDateFrom && matchesDateTo;
   });
+
+  const opsTotalPages = Math.ceil(filteredOperations.length / opsPageSize) || 1;
+  const safeOpsPage = Math.min(opsPage, opsTotalPages);
+  const pagedOperations = filteredOperations.slice((safeOpsPage - 1) * opsPageSize, safeOpsPage * opsPageSize);
 
   const uniqueCardCodes = Array.from(new Set(operations.map(o => o.card_code)));
   const uniqueStationNames = Array.from(new Set(operations.map(o => o.station_name)));
@@ -994,7 +1008,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCards.map((card) => (
+                    {pagedCards.map((card) => (
                       <TableRow key={card.id} className="border-b border-border">
                         <TableCell className="font-mono py-1">
                           <div className="flex items-center gap-2">
@@ -1053,6 +1067,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </TableBody>
                 </Table>
               </CardContent>
+              <TablePagination
+                currentPage={safeCardsPage}
+                totalPages={cardsTotalPages}
+                pageSize={cardsPageSize}
+                totalItems={filteredCards.length}
+                onPageChange={setCardsPage}
+                onPageSizeChange={(s) => { setCardsPageSize(s); setCardsPage(1); }}
+              />
             </Card>
           </TabsContent>
 
@@ -1232,7 +1254,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredOperations.map((op) => (
+                      {pagedOperations.map((op) => (
                         <TableRow key={op.id} className="border-b border-border">
                           <TableCell className="font-mono py-1">
                             <div className="flex items-center gap-2">
@@ -1271,6 +1293,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </Table>
                 </div>
               </CardContent>
+              <TablePagination
+                currentPage={safeOpsPage}
+                totalPages={opsTotalPages}
+                pageSize={opsPageSize}
+                totalItems={filteredOperations.length}
+                onPageChange={setOpsPage}
+                onPageSizeChange={(s) => { setOpsPageSize(s); setOpsPage(1); }}
+              />
             </Card>
           </TabsContent>
 
