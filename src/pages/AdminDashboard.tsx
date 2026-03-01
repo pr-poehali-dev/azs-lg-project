@@ -996,7 +996,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <TableBody>
                     {filteredCards.map((card) => (
                       <TableRow key={card.id} className="border-b border-border">
-                        <TableCell className="font-mono">
+                        <TableCell className="font-mono py-1">
                           <div className="flex items-center gap-2">
                             <span className={card.card_code === '0000' ? 'bg-accent text-background px-1 rounded' : 'text-accent'}>
                               {card.card_code}
@@ -1006,10 +1006,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-foreground">{card.client_name}</TableCell>
-                        <TableCell className="text-foreground">{card.fuel_type}</TableCell>
-                        <TableCell className="font-bold text-accent">{card.balance_liters.toFixed(3)}</TableCell>
-                        <TableCell className="text-foreground">
+                        <TableCell className="text-foreground py-1">{card.client_name}</TableCell>
+                        <TableCell className="text-foreground py-1">{card.fuel_type}</TableCell>
+                        <TableCell className="font-bold text-accent py-1">{card.balance_liters.toFixed(3)}</TableCell>
+                        <TableCell className="text-foreground py-1">
                           {card.daily_limit > 0 ? card.daily_limit.toFixed(3) : <span className="text-muted-foreground">без лимита</span>}
                         </TableCell>
                         <TableCell>
