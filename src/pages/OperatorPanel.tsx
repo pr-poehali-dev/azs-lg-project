@@ -184,6 +184,7 @@ export default function OperatorPanel() {
 
   const extractCardCode = (raw: string): string => {
     const cleaned = raw.trim();
+    if (cleaned.length === 4) return cleaned;
     if (cleaned.length >= 12) return cleaned.substring(8, 12);
     return cleaned;
   };
