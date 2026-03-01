@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
+import TablePagination from '@/components/ui/table-pagination';
 import { useOperations } from '@/contexts/OperationsContext';
 import * as XLSX from 'xlsx';
 import { adminApi } from '@/utils/adminApi';
@@ -106,6 +107,8 @@ export default function CardOperations() {
   const [selectedStation, setSelectedStation] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
+  const [opsPage, setOpsPage] = useState(1);
+  const [opsPageSize, setOpsPageSize] = useState(20);
 
   const selectedCardData = cards.find(c => c.id === selectedCard);
   
@@ -187,6 +190,10 @@ export default function CardOperations() {
     ...op,
     balance: balanceMap.get(op.id) || 0
   }));
+
+  const opsTotalPages = Math.ceil(filteredOperations.length / opsPageSize) || 1;
+  const safeOpsPage = Math.min(opsPage, opsTotalPages);
+  const pagedOperations = operationsWithBalance.slice((safeOpsPage - 1) * opsPageSize, safeOpsPage * opsPageSize);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background">
@@ -370,7 +377,7 @@ export default function CardOperations() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    operationsWithBalance.map((op) => (
+                    pagedOperations.map((op) => (
                       <TableRow key={op.id} className="border-b border-border">
                         <TableCell className="text-foreground py-2">{op.station_name}</TableCell>
                         <TableCell className="text-muted-foreground text-sm py-2">{op.operation_date}</TableCell>
@@ -390,6 +397,16 @@ export default function CardOperations() {
                 </TableBody>
                 </Table>
               </div>
+            )}
+            {filteredOperations.length > 0 && (
+              <TablePagination
+                currentPage={safeOpsPage}
+                totalPages={opsTotalPages}
+                pageSize={opsPageSize}
+                totalItems={filteredOperations.length}
+                onPageChange={setOpsPage}
+                onPageSizeChange={(s) => { setOpsPageSize(s); setOpsPage(1); }}
+              />
             )}
           </CardContent>
         </Card>
